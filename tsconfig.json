@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "declaration": true, // Generate .d.ts files for TypeScript types
+    "outDir": "./dist", // Output directory for compiled files
+    "strict": true, // Enable strict type checking
+    "esModuleInterop": true, // Allow default imports from CommonJS
+    "skipLibCheck": true // Skip type checking of declaration files
+  },
+  "include": [
+    "src"
+  ]
+}
