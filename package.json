@@ -1,6 +1,6 @@
 {
   "name": "react-minimalist-form",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight form management hook for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

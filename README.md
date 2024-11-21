@@ -1,16 +1,23 @@
 # React Minimalist Form
 
-A lightweight and flexible React custom hook for managing form state with TypeScript support. Designed to provide a simple and intuitive API for common form needs, including field setters, value tracking, and field-level watching, while keeping your codebase clean and manageable.
+A lightweight and flexible React custom hook for managing form state with TypeScript support.
+
+Designed to provide a simple and intuitive API for common form needs, including field setters, value tracking, and field-level watching, while keeping your codebase clean and manageable.
 
 ---
 
 ## Features
 
 🎯 Minimal API: Simple and clear interface to handle forms without additional dependencies.
+
 🧑‍💻 TypeScript Support: Fully type-safe, ensuring robust and predictable behavior.
+
 ⚡ Dynamic Setters: Automatic creation of setters for all fields.
+
 👀 Watch Functionality: Track individual fields or the entire form state in real-time.
+
 🔄 Reset Support: Easily reset form values to their initial state.
+
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
 ---
