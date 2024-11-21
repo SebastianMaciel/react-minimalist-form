@@ -4,8 +4,6 @@ A lightweight and flexible React custom hook for managing form state with TypeSc
 
 Designed to provide a simple and intuitive API for common form needs, including field setters, value tracking, and field-level watching, while keeping your codebase clean and manageable.
 
----
-
 ## Features
 
 🎯 Minimal API: Simple and clear interface to handle forms without additional dependencies.
@@ -20,8 +18,6 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
----
-
 ## Installation
 
 Install the library using `pnpm` (recommended) or your preferred package manager.
@@ -29,8 +25,6 @@ Install the library using `pnpm` (recommended) or your preferred package manager
 ```bash
 pnpm add react-minimalist-form
 ```
-
----
 
 ## Usage
 
@@ -119,8 +113,6 @@ const MyForm = () => {
 };
 ```
 
----
-
 ## API
 
 `useForm<T>(initialValues: T): UseForm<T>`
@@ -148,8 +140,6 @@ const { values, setters, handleChange, resetForm, watch } = useForm({
 });
 ```
 
----
-
 ## Contributing
 
 We welcome contributions! Feel free to submit issues or pull requests to improve this library. Please ensure all changes are accompanied by appropriate documentation updates.
@@ -170,13 +160,9 @@ cd react-minimalist-form
 pnpm install
 ```
 
----
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
 
 ## Author
 
