@@ -1,9 +1,10 @@
 {
   "name": "react-minimalist-form",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A lightweight form management hook for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
