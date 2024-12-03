@@ -76,41 +76,79 @@ The watch function allows you to track individual fields or the entire form stat
 
 ```tsx
 import React from "react";
-import { useForm } from "react-minimalist-form";
+import { useForm } from "./simpleForm";
 
 interface FormData {
   username: string;
   email: string;
+  role: string;
+  isSubscribed: boolean;
 }
 
-const MyForm = () => {
+const App = () => {
   const { values, handleChange, watch } = useForm<FormData>({
     username: "",
     email: "",
+    role: "",
+    isSubscribed: false,
   });
 
-  const watchedUsername = watch("username"); // Watch specific field
-  const watchedValues = watch(); // Watch entire form state
+  // Watch the username field
+  const watchedUsername = watch("username");
+  console.log(values);
 
   return (
-    <form>
+    <form
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        maxWidth: "200px",
+        gap: "1rem",
+      }}
+    >
       <input
         name='username'
         value={values.username}
         onChange={handleChange}
         placeholder='Username'
       />
+
       <input
         name='email'
         value={values.email}
         onChange={handleChange}
         placeholder='Email'
       />
-      <p>Watched Username: {watchedUsername}</p>
-      <p>Form Values: {JSON.stringify(watchedValues)}</p>
+
+      <select
+        name='role'
+        value={values.role}
+        onChange={handleChange}
+      >
+        <option value='student'>Student</option>
+        <option value='teacher'>Teacher</option>
+      </select>
+
+      <label>
+        <input
+          type='checkbox'
+          name='isSubscribed'
+          checked={values.isSubscribed}
+          onChange={handleChange}
+        />
+        Subscribe to newsletter
+      </label>
+
+      <p>
+        Current Username: <pre>{JSON.stringify(values, null, 2)}</pre>
+      </p>
     </form>
   );
 };
+
+export default App;
 ```
 
 ## API
@@ -169,4 +207,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 👤 **Sebastian Maciel**
 
 Follow me on GitHub: [github.com/SebastianMaciel](https://github.com/SebastianMaciel)
+
 Linkedin: [Sebastian Maciel](https://www.linkedin.com/in/sebastianmaciel/)

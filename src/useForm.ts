@@ -12,7 +12,9 @@ interface UseForm<T> {
   values: T;
   setters: Setters<T>;
   handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => void;
   resetForm: () => void;
   watch: <K extends keyof T>(key?: K) => T[K] | T;
@@ -31,12 +33,19 @@ export const useForm = <T extends Record<string, any>>(
   }, {} as Setters<T>);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const newValue =
+      type === "checkbox" && e.target instanceof HTMLInputElement
+        ? e.target.checked
+        : value;
+
     setValues((prevValues) => ({
       ...prevValues,
-      [name]: value,
+      [name]: newValue,
     }));
   };
 
