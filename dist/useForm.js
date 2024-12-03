@@ -11,8 +11,11 @@ const useForm = (initialValues) => {
         return acc;
     }, {});
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setValues((prevValues) => (Object.assign(Object.assign({}, prevValues), { [name]: value })));
+        const { name, value, type } = e.target;
+        const newValue = type === "checkbox" && e.target instanceof HTMLInputElement
+            ? e.target.checked
+            : value;
+        setValues((prevValues) => (Object.assign(Object.assign({}, prevValues), { [name]: newValue })));
     };
     const resetForm = () => {
         setValues(initialValues);

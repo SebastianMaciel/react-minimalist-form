@@ -4,6 +4,10 @@ A lightweight and flexible React custom hook for managing form state with TypeSc
 
 Designed to provide a simple and intuitive API for common form needs, including field setters, value tracking, and field-level watching, while keeping your codebase clean and manageable.
 
+### Try it out on CodeSandbox
+
+[![Edit react-minimalist-form](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/devbox/rough-wildflower-7wsd5y?embed=1)
+
 ## Features
 
 🎯 Minimal API: Simple and clear interface to handle forms without additional dependencies.

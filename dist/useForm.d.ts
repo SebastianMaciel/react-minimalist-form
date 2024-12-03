@@ -4,7 +4,7 @@ type Setters<T> = {
 interface UseForm<T> {
     values: T;
     setters: Setters<T>;
-    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     resetForm: () => void;
     watch: <K extends keyof T>(key?: K) => T[K] | T;
 }
