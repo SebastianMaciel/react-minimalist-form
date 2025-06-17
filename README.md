@@ -52,7 +52,7 @@ interface FormData {
 }
 
 const MyForm = () => {
-  const { values, errors, dirtyFields, isDirty, handleChange, resetForm, validate } = useForm<FormData>(
+  const { values, errors, dirtyFields, isDirty, handleChange, handleSubmit, resetForm, validate } = useForm<FormData>(
     {
       username: "",
       email: "",
@@ -63,14 +63,12 @@ const MyForm = () => {
     }
   );
 
-  const onSubmit = async () => {
-    if (await validate()) {
-      console.log("submit", values);
-    }
+  const onSubmit = () => {
+    console.log("submit", values);
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <input
         name='username'
         value={values.username}
@@ -190,19 +188,17 @@ const checkUsername = async (u: string) => {
 };
 
 const App = () => {
-  const { values, handleChange, validate, errors } = useForm<FormData>(
+  const { values, handleChange, handleSubmit, validate, errors } = useForm<FormData>(
     { username: "" },
     { username: checkUsername }
   );
 
-  const onSubmit = async () => {
-    if (await validate()) {
-      console.log("submit", values);
-    }
+  const onSubmit = () => {
+    console.log("submit", values);
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <input
         name="username"
         value={values.username}
@@ -231,7 +227,7 @@ interface FormData {
 }
 
 const ComplexForm = () => {
-  const { values, setters, validate, errors } = useForm<FormData>(
+  const { values, setters, handleChange, handleSubmit, validate, errors } = useForm<FormData>(
     {
       user: { firstName: "", lastName: "" },
       tags: [],
@@ -245,8 +241,12 @@ const ComplexForm = () => {
 
   const addTag = () => setters.tags([...values.tags, ""]);
 
+  const onSubmit = () => {
+    console.log(values);
+  };
+
   return (
-    <form onSubmit={async (e) => { e.preventDefault(); await validate(); }}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <input
         name="user.firstName"
         value={values.user.firstName}
@@ -295,6 +295,7 @@ A custom hook that provides utilities for managing form state.
 - `values`: Current state of the form.
 - `setters`: A dynamic object containing setter functions for each field.
 - `handleChange`: A function to handle onChange events for input fields.
+- `handleSubmit`: Wraps validation and `event.preventDefault` for easier form submission.
 - `resetForm`: Resets the form to its initial values.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `errors`: Object containing validation errors.
@@ -312,6 +313,7 @@ const {
   dirtyFields,
   isDirty,
   handleChange,
+  handleSubmit,
   resetForm,
   validate,
   watch,

@@ -13,6 +13,7 @@ interface UseForm<T> {
     dirtyFields: DirtyFields<T>;
     isDirty: boolean;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+    handleSubmit: (cb: () => void | Promise<void>) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     resetForm: () => void;
     validate: () => Promise<boolean>;
     watch: <K extends keyof T>(key?: K) => T[K] | T;
