@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 
 const parsePath = (path: string): (string | number)[] =>
   path
@@ -97,20 +97,22 @@ export const useForm = <T extends Record<string, any>>(
   const isDirty = Object.keys(initialRef.current).some((k) => dirtyFields[k]);
   const isTouched = Object.keys(initialRef.current).some((k) => touchedFields[k]);
 
-  const setters = Object.keys(initialRef.current).reduce((acc, key) => {
-    acc[key as keyof T] = (value: any) => {
-      setValues((prevValues) => {
-        const newValues = { ...prevValues, [key]: value };
-        setDirtyFields((d) => ({
-          ...d,
-          [key]:
-            newValues[key as keyof T] !== initialRef.current[key as keyof T],
-        }));
-        return newValues;
-      });
-    };
-    return acc;
-  }, {} as Setters<T>);
+  const setters = useMemo(() => {
+    return Object.keys(initialRef.current).reduce((acc, key) => {
+      acc[key as keyof T] = (value: any) => {
+        setValues((prevValues) => {
+          const newValues = { ...prevValues, [key]: value };
+          setDirtyFields((d) => ({
+            ...d,
+            [key]:
+              newValues[key as keyof T] !== initialRef.current[key as keyof T],
+          }));
+          return newValues;
+        });
+      };
+      return acc;
+    }, {} as Setters<T>);
+  }, [initialRef.current]);
 
   const handleChange = (
     e: React.ChangeEvent<
