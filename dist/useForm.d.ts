@@ -37,6 +37,7 @@ interface UseForm<T> {
     };
     setFieldValue: (path: string, value: any) => void;
     registerField: (path: string, initialValue: any) => void;
+    unregisterField: (path: string) => void;
 }
 export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>, config?: UseFormConfig) => UseForm<T>;
 export {};

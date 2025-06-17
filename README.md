@@ -36,6 +36,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🌳 Nested Names: Use dot or bracket notation in `name` attributes to update nested fields automatically.
 ➕ Dynamic Field Registration with `registerField` for runtime fields.
+➖ Dynamic Field Unregistration with `unregisterField` to remove them.
 
 ## Installation
 
@@ -359,11 +360,12 @@ clearErrors("user.address.city");
 
 ## Dynamic Field Registration
 
-Add fields after initialization using `registerField(path, initialValue)`.
+Add fields after initialization using `registerField(path, initialValue)`. Remove them when no longer needed with `unregisterField(path)`.
 
 ```tsx
-const { registerField } = useForm({});
+const { registerField, unregisterField } = useForm({});
 registerField("extra", "");
+unregisterField("extra");
 ```
 
 ## API
@@ -391,6 +393,7 @@ A custom hook that provides utilities for managing form state.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
 - `registerField`: Add new fields at runtime.
+- `unregisterField`: Remove a field and its state at runtime.
 - `errors`: Object containing validation errors.
 - `isValid`: `true` when the form has no validation errors.
 - `isSubmitting`: `true` while `handleSubmit` is running.
@@ -422,7 +425,9 @@ const {
   validate,
   watch,
   setFieldValue,
-} = useForm(
+  registerField,
+  unregisterField,
+  } = useForm(
   { username: "", email: "" },
   {
     username: (v) => (!v ? "Required" : null),

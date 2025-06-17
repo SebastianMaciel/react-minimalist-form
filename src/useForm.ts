@@ -59,6 +59,7 @@ interface UseForm<T> {
   };
   setFieldValue: (path: string, value: any) => void;
   registerField: (path: string, initialValue: any) => void;
+  unregisterField: (path: string) => void;
 }
 
 export const useForm = <T extends Record<string, any>>(
@@ -399,6 +400,58 @@ export const useForm = <T extends Record<string, any>>(
     });
   };
 
+  const unregisterField = useCallback((pathString: string) => {
+    const path = pathString
+      .replace(/\[(\w+)\]/g, ".$1")
+      .split(".")
+      .filter(Boolean)
+      .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+
+    const removeNested = (obj: any, keys: (string | number)[]): any => {
+      if (!obj) return obj;
+      const [first, ...rest] = keys;
+      if (rest.length === 0) {
+        if (Array.isArray(obj)) {
+          const arr = [...obj];
+          arr.splice(first as number, 1);
+          return arr;
+        }
+        const { [first as string]: _omit, ...restObj } = obj;
+        return restObj;
+      }
+      if (Array.isArray(obj)) {
+        const arr = [...obj];
+        arr[first as number] = removeNested(arr[first as number], rest);
+        return arr;
+      }
+      return {
+        ...obj,
+        [first]: removeNested(obj[first], rest),
+      };
+    };
+
+    const topKey = path[0] as string;
+
+    initialRef.current = removeNested(initialRef.current, path);
+
+    setValues((prev) => removeNested(prev, path));
+
+    setDirtyFields((d) => {
+      const { [topKey]: _omit, ...rest } = d;
+      return rest as DirtyFields<T>;
+    });
+    setTouchedFields((t) => {
+      const { [topKey]: _omit, ...rest } = t;
+      return rest as TouchedFields<T>;
+    });
+
+    clearErrors(pathString);
+
+    if (pathString in validationRulesRef.current) {
+      delete validationRulesRef.current[pathString];
+    }
+  }, []);
+
   const runValidation = useCallback(
     async (vals: T): Promise<boolean> => {
       if (!validationRulesRef.current || Object.keys(validationRulesRef.current).length === 0) {
@@ -506,5 +559,6 @@ export const useForm = <T extends Record<string, any>>(
     watch: watchCallback,
     setFieldValue,
     registerField,
+    unregisterField,
   };
 };
