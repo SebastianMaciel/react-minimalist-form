@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useForm = void 0;
 const react_1 = require("react");
@@ -221,6 +232,48 @@ const useForm = (initialValues, validationRules, config = {}) => {
             return ne;
         });
     };
+    const unregisterField = (0, react_1.useCallback)((pathString) => {
+        const path = pathString
+            .replace(/\[(\w+)\]/g, ".$1")
+            .split(".")
+            .filter(Boolean)
+            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const removeNested = (obj, keys) => {
+            if (!obj)
+                return obj;
+            const [first, ...rest] = keys;
+            if (rest.length === 0) {
+                if (Array.isArray(obj)) {
+                    const arr = [...obj];
+                    arr.splice(first, 1);
+                    return arr;
+                }
+                const _a = obj, _b = first, _omit = _a[_b], restObj = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+                return restObj;
+            }
+            if (Array.isArray(obj)) {
+                const arr = [...obj];
+                arr[first] = removeNested(arr[first], rest);
+                return arr;
+            }
+            return Object.assign(Object.assign({}, obj), { [first]: removeNested(obj[first], rest) });
+        };
+        const topKey = path[0];
+        initialRef.current = removeNested(initialRef.current, path);
+        setValues((prev) => removeNested(prev, path));
+        setDirtyFields((d) => {
+            const _a = d, _b = topKey, _omit = _a[_b], rest = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+            return rest;
+        });
+        setTouchedFields((t) => {
+            const _a = t, _b = topKey, _omit = _a[_b], rest = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+            return rest;
+        });
+        clearErrors(pathString);
+        if (pathString in validationRulesRef.current) {
+            delete validationRulesRef.current[pathString];
+        }
+    }, []);
     const runValidation = (0, react_1.useCallback)((vals) => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRulesRef.current || Object.keys(validationRulesRef.current).length === 0) {
             setIsValid(true);
@@ -301,6 +354,7 @@ const useForm = (initialValues, validationRules, config = {}) => {
         watch: watchCallback,
         setFieldValue,
         registerField,
+        unregisterField,
     };
 };
 exports.useForm = useForm;
