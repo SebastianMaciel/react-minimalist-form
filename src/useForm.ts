@@ -386,12 +386,15 @@ export const useForm = <T extends Record<string, any>>(
       setErrors({});
       return;
     }
-    const key = pathString
-      .replace(/\[(\w+)\]/g, ".$1")
-      .split(".")[0];
+    const normalized = pathString.replace(/\[(\w+)\]/g, ".$1").replace(/^\./, "");
     setErrors((e) => {
       const ne = { ...e };
-      delete ne[key];
+      if (normalized in ne) {
+        delete ne[normalized];
+      } else {
+        const topKey = normalized.split(".")[0];
+        delete ne[topKey];
+      }
       return ne;
     });
   };

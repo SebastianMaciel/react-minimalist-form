@@ -24,7 +24,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 🔄 Reset Support: Easily reset form values to their initial state or new defaults.
 
 🧹 `resetField` to restore any field to its initial value.
-🚫 `clearErrors` to remove validation messages.
+🚫 `clearErrors` to remove validation messages (supports nested paths).
 ⏳ `isSubmitting` flag while the submit callback runs.
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
@@ -333,6 +333,7 @@ const { setFieldValue } = useForm({
 });
 
 setFieldValue("user.address.city", "New York");
+clearErrors("user.address.city");
 ```
 ## Handling Special Input Types
 
@@ -386,7 +387,7 @@ A custom hook that provides utilities for managing form state.
 - `handleBlur`: Marks a field as touched when an input loses focus.
 - `resetForm`: Resets the form to its initial values. Pass new defaults to `resetForm` to update the initial state.
 - `resetField`: Restore a single field to its initial value.
-- `clearErrors`: Remove error messages for a field or the whole form.
+- `clearErrors`: Remove error messages for a field or the whole form. Pass a nested path to target specific errors.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
 - `registerField`: Add new fields at runtime.
