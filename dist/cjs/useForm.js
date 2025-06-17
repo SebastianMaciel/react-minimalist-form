@@ -5,9 +5,19 @@ const react_1 = require("react");
 const useForm = (initialValues, validationRules) => {
     const [values, setValues] = (0, react_1.useState)(initialValues);
     const [errors, setErrors] = (0, react_1.useState)({});
+    const initialDirty = Object.keys(initialValues).reduce((acc, key) => {
+        acc[key] = false;
+        return acc;
+    }, {});
+    const [dirtyFields, setDirtyFields] = (0, react_1.useState)(initialDirty);
+    const isDirty = Object.keys(initialValues).some((k) => dirtyFields[k]);
     const setters = Object.keys(initialValues).reduce((acc, key) => {
         acc[key] = (value) => {
-            setValues((prevValues) => (Object.assign(Object.assign({}, prevValues), { [key]: value })));
+            setValues((prevValues) => {
+                const newValues = Object.assign(Object.assign({}, prevValues), { [key]: value });
+                setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [key]: newValues[key] !== initialValues[key] })));
+                return newValues;
+            });
         };
         return acc;
     }, {});
@@ -16,11 +26,34 @@ const useForm = (initialValues, validationRules) => {
         const newValue = type === "checkbox" && e.target instanceof HTMLInputElement
             ? e.target.checked
             : value;
-        setValues((prevValues) => (Object.assign(Object.assign({}, prevValues), { [name]: newValue })));
+        setValues((prevValues) => {
+            const path = name
+                .replace(/\[(\w+)\]/g, ".$1")
+                .split(".")
+                .filter(Boolean)
+                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            const setNestedValue = (obj, keys, val) => {
+                var _a, _b;
+                if (!keys.length)
+                    return val;
+                const [first, ...rest] = keys;
+                if (Array.isArray(obj)) {
+                    const arr = [...obj];
+                    arr[first] = setNestedValue((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
+                    return arr;
+                }
+                return Object.assign(Object.assign({}, obj), { [first]: setNestedValue((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
+            };
+            const updated = setNestedValue(prevValues, path, newValue);
+            const topKey = path[0];
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialValues[topKey] })));
+            return updated;
+        });
     };
     const resetForm = () => {
         setValues(initialValues);
         setErrors({});
+        setDirtyFields(initialDirty);
     };
     const validate = (0, react_1.useCallback)(() => {
         if (!validationRules) {
@@ -46,6 +79,8 @@ const useForm = (initialValues, validationRules) => {
         values,
         setters,
         errors,
+        dirtyFields,
+        isDirty,
         handleChange,
         resetForm,
         validate,

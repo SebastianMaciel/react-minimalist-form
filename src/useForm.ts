@@ -14,10 +14,14 @@ export type ValidationRules<T> = {
 
 type Errors<T> = Partial<Record<keyof T, string>>;
 
+type DirtyFields<T> = Record<keyof T, boolean>;
+
 interface UseForm<T> {
   values: T;
   setters: Setters<T>;
   errors: Errors<T>;
+  dirtyFields: DirtyFields<T>;
+  isDirty: boolean;
   handleChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -34,10 +38,25 @@ export const useForm = <T extends Record<string, any>>(
 ): UseForm<T> => {
   const [values, setValues] = useState<FormValues<T>>(initialValues);
   const [errors, setErrors] = useState<Errors<T>>({});
+  const initialDirty = Object.keys(initialValues).reduce((acc, key) => {
+    acc[key as keyof T] = false;
+    return acc;
+  }, {} as DirtyFields<T>);
+  const [dirtyFields, setDirtyFields] = useState<DirtyFields<T>>(initialDirty);
+  const isDirty = Object.keys(initialValues).some(
+    (k) => dirtyFields[k as keyof T]
+  );
 
   const setters = Object.keys(initialValues).reduce((acc, key) => {
     acc[key as keyof T] = (value: any) => {
-      setValues((prevValues) => ({ ...prevValues, [key]: value }));
+      setValues((prevValues) => {
+        const newValues = { ...prevValues, [key]: value };
+        setDirtyFields((d) => ({
+          ...d,
+          [key]: newValues[key as keyof T] !== initialValues[key as keyof T],
+        }));
+        return newValues;
+      });
     };
     return acc;
   }, {} as Setters<T>);
@@ -89,13 +108,20 @@ export const useForm = <T extends Record<string, any>>(
         };
       };
 
-      return setNestedValue(prevValues, path, newValue);
+      const updated = setNestedValue(prevValues, path, newValue);
+      const topKey = path[0] as keyof T;
+      setDirtyFields((d) => ({
+        ...d,
+        [topKey]: updated[topKey] !== initialValues[topKey],
+      }));
+      return updated;
     });
   };
 
   const resetForm = () => {
     setValues(initialValues);
     setErrors({});
+    setDirtyFields(initialDirty);
   };
 
   const validate = useCallback((): boolean => {
@@ -130,6 +156,8 @@ export const useForm = <T extends Record<string, any>>(
     values,
     setters,
     errors,
+    dirtyFields,
+    isDirty,
     handleChange,
     resetForm,
     validate,

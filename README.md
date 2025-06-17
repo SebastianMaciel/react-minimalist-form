@@ -18,6 +18,8 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 👀 Watch Functionality: Track individual fields or the entire form state in real-time.
 
+📝 Dirty State Tracking: `dirtyFields` and `isDirty` indicate modified fields and overall form changes.
+
 🔄 Reset Support: Easily reset form values to their initial state.
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
@@ -50,7 +52,7 @@ interface FormData {
 }
 
 const MyForm = () => {
-  const { values, errors, handleChange, resetForm, validate } = useForm<FormData>(
+  const { values, errors, dirtyFields, isDirty, handleChange, resetForm, validate } = useForm<FormData>(
     {
       username: "",
       email: "",
@@ -89,6 +91,8 @@ const MyForm = () => {
   );
 };
 ```
+
+`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. Calling `resetForm` clears both states.
 
 ## Advanced Example with Watch
 
@@ -255,6 +259,8 @@ A custom hook that provides utilities for managing form state.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `errors`: Object containing validation errors.
 - `validate`: Run validation and update the errors state. Returns `true` when the form is valid.
+- `dirtyFields`: Object tracking which fields have been modified.
+- `isDirty`: `true` when any field has changed.
 
 ### Example
 
@@ -263,6 +269,8 @@ const {
   values,
   errors,
   setters,
+  dirtyFields,
+  isDirty,
   handleChange,
   resetForm,
   validate,
