@@ -35,6 +35,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 ⚙️ Configurable Validation Triggers: Choose to validate on change, blur, or both.
 
 🌳 Nested Names: Use dot or bracket notation in `name` attributes to update nested fields automatically.
+➕ Dynamic Field Registration with `registerField` for runtime fields.
 
 ## Installation
 
@@ -355,6 +356,14 @@ setFieldValue("user.address.city", "New York");
 </select>
 ```
 
+## Dynamic Field Registration
+
+Add fields after initialization using `registerField(path, initialValue)`.
+
+```tsx
+const { registerField } = useForm({});
+registerField("extra", "");
+```
 
 ## API
 
@@ -380,6 +389,7 @@ A custom hook that provides utilities for managing form state.
 - `clearErrors`: Remove error messages for a field or the whole form.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
+- `registerField`: Add new fields at runtime.
 - `errors`: Object containing validation errors.
 - `isValid`: `true` when the form has no validation errors.
 - `isSubmitting`: `true` while `handleSubmit` is running.

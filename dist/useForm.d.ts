@@ -3,16 +3,18 @@ type Setters<T> = {
 };
 export type ValidationRules<T> = {
     [K in keyof T]?: (value: T[K], values: T) => string | null | Promise<string | null>;
+} & {
+    [path: string]: (value: any, values: any) => string | null | Promise<string | null>;
 };
-type Errors<T> = Partial<Record<keyof T, string>>;
-type DirtyFields<T> = Record<keyof T, boolean>;
-type TouchedFields<T> = Record<keyof T, boolean>;
+type Errors<T> = Record<string, string>;
+type DirtyFields<T> = Record<string, boolean>;
+type TouchedFields<T> = Record<string, boolean>;
 export interface UseFormConfig {
     validateOnChange?: boolean;
     validateOnBlur?: boolean;
 }
 interface UseForm<T> {
-    values: T;
+    values: T & Record<string, any>;
     setters: Setters<T>;
     errors: Errors<T>;
     isValid: boolean;
@@ -34,6 +36,7 @@ interface UseForm<T> {
         (path: string): any;
     };
     setFieldValue: (path: string, value: any) => void;
+    registerField: (path: string, initialValue: any) => void;
 }
 export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>, config?: UseFormConfig) => UseForm<T>;
 export {};
