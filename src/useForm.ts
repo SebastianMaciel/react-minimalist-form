@@ -30,6 +30,7 @@ interface UseForm<T> {
   setters: Setters<T>;
   errors: Errors<T>;
   isValid: boolean;
+  isSubmitting: boolean;
   dirtyFields: DirtyFields<T>;
   isDirty: boolean;
   touchedFields: TouchedFields<T>;
@@ -48,6 +49,8 @@ interface UseForm<T> {
     cb: () => void | Promise<void>
   ) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   resetForm: (nextInitial?: T) => void;
+  resetField: (path: string) => void;
+  clearErrors: (path?: string) => void;
   validate: () => Promise<boolean>;
   watch: {
     (): T;
@@ -67,6 +70,7 @@ export const useForm = <T extends Record<string, any>>(
   const [values, setValues] = useState<FormValues<T>>(initialRef.current);
   const [errors, setErrors] = useState<Errors<T>>({});
   const [isValid, setIsValid] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
     acc[key as keyof T] = false;
     return acc;
@@ -271,6 +275,68 @@ export const useForm = <T extends Record<string, any>>(
     setTouchedFields(newTouched);
   };
 
+  const resetField = (pathString: string) => {
+    const path = pathString
+      .replace(/\[(\w+)\]/g, ".$1")
+      .split(".")
+      .filter(Boolean)
+      .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+    const topKey = path[0] as keyof T;
+
+    const getNested = (obj: any, keys: (string | number)[]): any =>
+      keys.reduce<any>((acc, key) => acc?.[key], obj);
+    const initialVal = getNested(initialRef.current, path);
+
+    setValues((prev) => {
+      const setNested = (
+        obj: any,
+        keys: (string | number)[],
+        val: any,
+      ): any => {
+        if (!keys.length) return val;
+        const [first, ...rest] = keys;
+        if (Array.isArray(obj)) {
+          const arr = [...obj];
+          arr[first as number] = setNested(
+            arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
+            rest,
+            val,
+          );
+          return arr;
+        }
+        return {
+          ...obj,
+          [first]: setNested(
+            obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
+            rest,
+            val,
+          ),
+        };
+      };
+
+      const updated = setNested(prev, path, initialVal);
+      return updated;
+    });
+
+    setDirtyFields((d) => ({ ...d, [topKey]: false }));
+    setTouchedFields((t) => ({ ...t, [topKey]: false }));
+  };
+
+  const clearErrors = (pathString?: string) => {
+    if (!pathString) {
+      setErrors({});
+      return;
+    }
+    const key = pathString
+      .replace(/\[(\w+)\]/g, ".$1")
+      .split(".")[0] as keyof T;
+    setErrors((e) => {
+      const ne = { ...e };
+      delete ne[key];
+      return ne;
+    });
+  };
+
   const runValidation = useCallback(
     async (vals: T): Promise<boolean> => {
       if (!validationRules) {
@@ -346,8 +412,13 @@ export const useForm = <T extends Record<string, any>>(
     (cb: () => void | Promise<void>) =>
       async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (await validate()) {
-          await cb();
+        setIsSubmitting(true);
+        try {
+          if (await validate()) {
+            await cb();
+          }
+        } finally {
+          setIsSubmitting(false);
         }
       },
     [validate]
@@ -358,6 +429,7 @@ export const useForm = <T extends Record<string, any>>(
     setters,
     errors,
     isValid,
+    isSubmitting,
     dirtyFields,
     isDirty,
     touchedFields,
@@ -366,6 +438,8 @@ export const useForm = <T extends Record<string, any>>(
     handleBlur,
     handleSubmit,
     resetForm,
+    resetField,
+    clearErrors,
     validate,
     watch: watchCallback,
     setFieldValue,
