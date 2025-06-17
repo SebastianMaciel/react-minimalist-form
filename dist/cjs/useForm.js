@@ -11,7 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useForm = void 0;
 const react_1 = require("react");
-const useForm = (initialValues, validationRules) => {
+const useForm = (initialValues, validationRules, config = {}) => {
+    const { validateOnChange = true, validateOnBlur = true } = config;
     const initialRef = (0, react_1.useRef)(initialValues);
     const [values, setValues] = (0, react_1.useState)(initialRef.current);
     const [errors, setErrors] = (0, react_1.useState)({});
@@ -164,10 +165,15 @@ const useForm = (initialValues, validationRules) => {
         return runValidation(values);
     }), [runValidation, values]);
     (0, react_1.useEffect)(() => {
-        if (validationRules) {
+        if (validateOnChange && validationRules) {
             runValidation(values);
         }
-    }, [values, touchedFields, runValidation, validationRules]);
+    }, [values, validateOnChange, runValidation, validationRules]);
+    (0, react_1.useEffect)(() => {
+        if (validateOnBlur && validationRules) {
+            runValidation(values);
+        }
+    }, [touchedFields, validateOnBlur, runValidation, validationRules]);
     function watch(path) {
         if (!path) {
             return values;
