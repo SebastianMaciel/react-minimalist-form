@@ -273,10 +273,24 @@ export const useForm = <T extends Record<string, any>>(
         };
       };
 
-      setValues((prev) => setNested(prev, path, initialValue));
-      initialRef.current = setNested(initialRef.current, path, initialValue);
-      setDirtyFields((d) => ({ ...d, [pathString]: false }));
-      setTouchedFields((t) => ({ ...t, [pathString]: false }));
+      const topKey = path[0] as string;
+
+      // update baseline first so dirtiness check uses the latest initial values
+      const nextInitial = setNested(initialRef.current, path, initialValue);
+      initialRef.current = nextInitial;
+
+      setValues((prev) => {
+        const updated = setNested(prev, path, initialValue);
+        setDirtyFields((d) => ({
+          ...d,
+          [topKey]:
+            (updated as any)[topKey] !== (initialRef.current as any)[topKey],
+        }));
+        setTouchedFields((t) =>
+          t[topKey] === undefined ? { ...t, [topKey]: false } : t,
+        );
+        return updated;
+      });
       if (!(pathString in validationRulesRef.current)) {
         (validationRulesRef.current as any)[pathString] = undefined as any;
       }
