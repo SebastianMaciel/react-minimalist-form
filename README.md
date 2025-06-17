@@ -176,6 +176,20 @@ const App = () => {
 export default App;
 ```
 
+### Watching Nested Fields
+
+`watch` also accepts dot or bracket notation to access nested values:
+
+```tsx
+const { watch } = useForm({
+  user: { firstName: "", lastName: "" },
+  tags: ["react"]
+});
+
+const first = watch("user.firstName");
+const firstTag = watch("tags[0]");
+```
+
 ## Async Validation Example
 
 Validation rules can return promises, enabling checks like verifying username availability:

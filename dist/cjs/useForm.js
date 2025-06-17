@@ -123,9 +123,21 @@ const useForm = (initialValues, validationRules) => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     }), [validationRules, values]);
-    const watch = (0, react_1.useCallback)((key) => {
-        return key ? values[key] : values;
-    }, [values]);
+    function watch(path) {
+        if (!path) {
+            return values;
+        }
+        if (typeof path === "string" && (path.includes(".") || path.includes("["))) {
+            const segments = path
+                .replace(/\[(\w+)\]/g, ".$1")
+                .split(".")
+                .filter(Boolean)
+                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            return segments.reduce((acc, seg) => acc === null || acc === void 0 ? void 0 : acc[seg], values);
+        }
+        return values[path];
+    }
+    const watchCallback = (0, react_1.useCallback)(watch, [values]);
     const handleSubmit = (0, react_1.useCallback)((cb) => (e) => __awaiter(void 0, void 0, void 0, function* () {
         e.preventDefault();
         if (yield validate()) {
@@ -145,7 +157,7 @@ const useForm = (initialValues, validationRules) => {
         handleSubmit,
         resetForm,
         validate,
-        watch,
+        watch: watchCallback,
         setFieldValue,
     };
 };
