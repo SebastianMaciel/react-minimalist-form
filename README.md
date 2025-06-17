@@ -23,6 +23,10 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🔄 Reset Support: Easily reset form values to their initial state or new defaults.
 
+🧹 `resetField` to restore any field to its initial value.
+🚫 `clearErrors` to remove validation messages.
+⏳ `isSubmitting` flag while the submit callback runs.
+
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
 ✅ Field-level Validation: Pass custom (sync or async) validation rules that receive both the field value and the full form state.
@@ -54,7 +58,22 @@ interface FormData {
 }
 
 const MyForm = () => {
-  const { values, errors, dirtyFields, isDirty, touchedFields, isTouched, handleChange, handleBlur, handleSubmit, resetForm, validate } = useForm<FormData>(
+  const {
+    values,
+    errors,
+    dirtyFields,
+    isDirty,
+    touchedFields,
+    isTouched,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    resetForm,
+    resetField,
+    clearErrors,
+    isSubmitting,
+    validate
+  } = useForm<FormData>(
     {
       username: "",
       email: "",
@@ -87,14 +106,18 @@ const MyForm = () => {
         placeholder='Email'
       />
       {errors.email && <span>{errors.email}</span>}
-      <button type='submit'>Submit</button>
+      <button type='submit' disabled={isSubmitting}>
+        {isSubmitting ? 'Saving...' : 'Submit'}
+      </button>
+      <button type='button' onClick={() => resetField('username')}>Reset username</button>
+      <button type='button' onClick={() => clearErrors()}>Clear errors</button>
       <button type='button' onClick={resetForm}>Reset</button>
     </form>
   );
 };
 ```
 
-`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. `touchedFields` and `isTouched` track fields that have been blurred. Calling `resetForm` clears all of these states. Pass new defaults to `resetForm` if you want to start over with a different initial state.
+`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. `touchedFields` and `isTouched` track fields that have been blurred. Calling `resetForm` clears all of these states. Use `resetField` to restore a single field and `clearErrors()` to remove validation messages. The `isSubmitting` flag is `true` while the submit callback runs. Pass new defaults to `resetForm` if you want to start over with a different initial state.
 
 ```tsx
 resetForm({ username: "", email: "" });
@@ -353,10 +376,13 @@ A custom hook that provides utilities for managing form state.
 - `handleSubmit`: Wraps validation and `event.preventDefault` for easier form submission.
 - `handleBlur`: Marks a field as touched when an input loses focus.
 - `resetForm`: Resets the form to its initial values. Pass new defaults to `resetForm` to update the initial state.
+- `resetField`: Restore a single field to its initial value.
+- `clearErrors`: Remove error messages for a field or the whole form.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
 - `errors`: Object containing validation errors.
 - `isValid`: `true` when the form has no validation errors.
+- `isSubmitting`: `true` while `handleSubmit` is running.
 - `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
 - `dirtyFields`: Object tracking which fields have been modified.
 - `isDirty`: `true` when any field has changed.
@@ -379,6 +405,9 @@ const {
   handleBlur,
   handleSubmit,
   resetForm,
+  resetField,
+  clearErrors,
+  isSubmitting,
   validate,
   watch,
   setFieldValue,

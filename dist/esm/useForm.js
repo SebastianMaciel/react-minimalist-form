@@ -14,6 +14,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     const [values, setValues] = useState(initialRef.current);
     const [errors, setErrors] = useState({});
     const [isValid, setIsValid] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = false;
         return acc;
@@ -138,6 +139,48 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         }, {});
         setTouchedFields(newTouched);
     };
+    const resetField = (pathString) => {
+        const path = pathString
+            .replace(/\[(\w+)\]/g, ".$1")
+            .split(".")
+            .filter(Boolean)
+            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const topKey = path[0];
+        const getNested = (obj, keys) => keys.reduce((acc, key) => acc === null || acc === void 0 ? void 0 : acc[key], obj);
+        const initialVal = getNested(initialRef.current, path);
+        setValues((prev) => {
+            const setNested = (obj, keys, val) => {
+                var _a, _b;
+                if (!keys.length)
+                    return val;
+                const [first, ...rest] = keys;
+                if (Array.isArray(obj)) {
+                    const arr = [...obj];
+                    arr[first] = setNested((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
+                    return arr;
+                }
+                return Object.assign(Object.assign({}, obj), { [first]: setNested((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
+            };
+            const updated = setNested(prev, path, initialVal);
+            return updated;
+        });
+        setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: false })));
+        setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: false })));
+    };
+    const clearErrors = (pathString) => {
+        if (!pathString) {
+            setErrors({});
+            return;
+        }
+        const key = pathString
+            .replace(/\[(\w+)\]/g, ".$1")
+            .split(".")[0];
+        setErrors((e) => {
+            const ne = Object.assign({}, e);
+            delete ne[key];
+            return ne;
+        });
+    };
     const runValidation = useCallback((vals) => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRules) {
             setIsValid(true);
@@ -188,8 +231,14 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     const watchCallback = useCallback(watch, [values]);
     const handleSubmit = useCallback((cb) => (e) => __awaiter(void 0, void 0, void 0, function* () {
         e.preventDefault();
-        if (yield validate()) {
-            yield cb();
+        setIsSubmitting(true);
+        try {
+            if (yield validate()) {
+                yield cb();
+            }
+        }
+        finally {
+            setIsSubmitting(false);
         }
     }), [validate]);
     return {
@@ -197,6 +246,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         setters,
         errors,
         isValid,
+        isSubmitting,
         dirtyFields,
         isDirty,
         touchedFields,
@@ -205,6 +255,8 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         handleBlur,
         handleSubmit,
         resetForm,
+        resetField,
+        clearErrors,
         validate,
         watch: watchCallback,
         setFieldValue,

@@ -16,6 +16,7 @@ interface UseForm<T> {
     setters: Setters<T>;
     errors: Errors<T>;
     isValid: boolean;
+    isSubmitting: boolean;
     dirtyFields: DirtyFields<T>;
     isDirty: boolean;
     touchedFields: TouchedFields<T>;
@@ -24,6 +25,8 @@ interface UseForm<T> {
     handleBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     handleSubmit: (cb: () => void | Promise<void>) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     resetForm: (nextInitial?: T) => void;
+    resetField: (path: string) => void;
+    clearErrors: (path?: string) => void;
     validate: () => Promise<boolean>;
     watch: {
         (): T;
