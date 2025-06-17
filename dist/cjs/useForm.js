@@ -18,6 +18,7 @@ const useForm = (initialValues, validationRules, config = {}) => {
     const [errors, setErrors] = (0, react_1.useState)({});
     const [isValid, setIsValid] = (0, react_1.useState)(true);
     const [isSubmitting, setIsSubmitting] = (0, react_1.useState)(false);
+    const validationRulesRef = (0, react_1.useRef)((validationRules !== null && validationRules !== void 0 ? validationRules : {}));
     const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = false;
         return acc;
@@ -115,6 +116,32 @@ const useForm = (initialValues, validationRules, config = {}) => {
             return updated;
         });
     }, []);
+    const registerField = (0, react_1.useCallback)((pathString, initialValue) => {
+        const path = pathString
+            .replace(/\[(\w+)\]/g, ".$1")
+            .split(".")
+            .filter(Boolean)
+            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const setNested = (obj, keys, val) => {
+            var _a, _b;
+            if (!keys.length)
+                return val;
+            const [first, ...rest] = keys;
+            if (Array.isArray(obj)) {
+                const arr = [...obj];
+                arr[first] = setNested((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
+                return arr;
+            }
+            return Object.assign(Object.assign({}, obj), { [first]: setNested((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
+        };
+        setValues((prev) => setNested(prev, path, initialValue));
+        initialRef.current = setNested(initialRef.current, path, initialValue);
+        setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [pathString]: false })));
+        setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [pathString]: false })));
+        if (!(pathString in validationRulesRef.current)) {
+            validationRulesRef.current[pathString] = undefined;
+        }
+    }, []);
     const handleBlur = (e) => {
         const path = e.target.name
             .replace(/\[(\w+)\]/g, ".$1")
@@ -185,13 +212,13 @@ const useForm = (initialValues, validationRules, config = {}) => {
         });
     };
     const runValidation = (0, react_1.useCallback)((vals) => __awaiter(void 0, void 0, void 0, function* () {
-        if (!validationRules) {
+        if (!validationRulesRef.current || Object.keys(validationRulesRef.current).length === 0) {
             setIsValid(true);
             return true;
         }
         const newErrors = {};
-        yield Promise.all(Object.keys(validationRules).map((key) => __awaiter(void 0, void 0, void 0, function* () {
-            const rule = validationRules[key];
+        yield Promise.all(Object.keys(validationRulesRef.current).map((key) => __awaiter(void 0, void 0, void 0, function* () {
+            const rule = validationRulesRef.current[key];
             if (rule) {
                 const error = yield rule(vals[key], vals);
                 if (error) {
@@ -203,20 +230,20 @@ const useForm = (initialValues, validationRules, config = {}) => {
         const valid = Object.keys(newErrors).length === 0;
         setIsValid(valid);
         return valid;
-    }), [validationRules]);
+    }), [validationRulesRef]);
     const validate = (0, react_1.useCallback)(() => __awaiter(void 0, void 0, void 0, function* () {
         return runValidation(values);
     }), [runValidation, values]);
     (0, react_1.useEffect)(() => {
-        if (validateOnChange && validationRules) {
+        if (validateOnChange && validationRulesRef.current) {
             runValidation(values);
         }
-    }, [values, validateOnChange, runValidation, validationRules]);
+    }, [values, validateOnChange, runValidation]);
     (0, react_1.useEffect)(() => {
-        if (validateOnBlur && validationRules) {
+        if (validateOnBlur && validationRulesRef.current) {
             runValidation(values);
         }
-    }, [touchedFields, validateOnBlur, runValidation, validationRules]);
+    }, [touchedFields, validateOnBlur, runValidation]);
     function watch(path) {
         if (!path) {
             return values;
@@ -263,6 +290,7 @@ const useForm = (initialValues, validationRules, config = {}) => {
         validate,
         watch: watchCallback,
         setFieldValue,
+        registerField,
     };
 };
 exports.useForm = useForm;
