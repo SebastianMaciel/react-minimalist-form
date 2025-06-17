@@ -21,7 +21,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 📝 Dirty State Tracking: `dirtyFields` and `isDirty` indicate modified fields and overall form changes.
 🙌 Touched State Tracking: `touchedFields` and `isTouched` tell you which fields have been blurred.
 
-🔄 Reset Support: Easily reset form values to their initial state.
+🔄 Reset Support: Easily reset form values to their initial state or new defaults.
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
@@ -93,7 +93,11 @@ const MyForm = () => {
 };
 ```
 
-`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. `touchedFields` and `isTouched` track fields that have been blurred. Calling `resetForm` clears all of these states.
+`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. `touchedFields` and `isTouched` track fields that have been blurred. Calling `resetForm` clears all of these states. Pass new defaults to `resetForm` if you want to start over with a different initial state.
+
+```tsx
+resetForm({ username: "", email: "" });
+```
 
 ## Advanced Example with Watch
 
@@ -324,7 +328,7 @@ A custom hook that provides utilities for managing form state.
 - `handleChange`: A function to handle onChange events for input fields.
 - `handleSubmit`: Wraps validation and `event.preventDefault` for easier form submission.
 - `handleBlur`: Marks a field as touched when an input loses focus.
-- `resetForm`: Resets the form to its initial values.
+- `resetForm`: Resets the form to its initial values. Pass new defaults to `resetForm` to update the initial state.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
 - `errors`: Object containing validation errors.
