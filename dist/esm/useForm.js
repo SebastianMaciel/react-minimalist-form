@@ -18,7 +18,7 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 const parsePath = (path) => path
     .replace(/\[(\w+)\]/g, ".$1")
     .split(".")
@@ -44,16 +44,18 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     const [touchedFields, setTouchedFields] = useState(initialTouched);
     const isDirty = Object.keys(initialRef.current).some((k) => dirtyFields[k]);
     const isTouched = Object.keys(initialRef.current).some((k) => touchedFields[k]);
-    const setters = Object.keys(initialRef.current).reduce((acc, key) => {
-        acc[key] = (value) => {
-            setValues((prevValues) => {
-                const newValues = Object.assign(Object.assign({}, prevValues), { [key]: value });
-                setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [key]: newValues[key] !== initialRef.current[key] })));
-                return newValues;
-            });
-        };
-        return acc;
-    }, {});
+    const setters = useMemo(() => {
+        return Object.keys(initialRef.current).reduce((acc, key) => {
+            acc[key] = (value) => {
+                setValues((prevValues) => {
+                    const newValues = Object.assign(Object.assign({}, prevValues), { [key]: value });
+                    setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [key]: newValues[key] !== initialRef.current[key] })));
+                    return newValues;
+                });
+            };
+            return acc;
+        }, {});
+    }, [initialRef.current]);
     const handleChange = (e) => {
         const { name, value, type } = e.target;
         if (type === "radio" &&
