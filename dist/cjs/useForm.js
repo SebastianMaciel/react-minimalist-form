@@ -84,6 +84,12 @@ const useForm = (initialValues, validationRules) => {
     const watch = (0, react_1.useCallback)((key) => {
         return key ? values[key] : values;
     }, [values]);
+    const handleSubmit = (0, react_1.useCallback)((cb) => (e) => __awaiter(void 0, void 0, void 0, function* () {
+        e.preventDefault();
+        if (yield validate()) {
+            yield cb();
+        }
+    }), [validate]);
     return {
         values,
         setters,
@@ -91,6 +97,7 @@ const useForm = (initialValues, validationRules) => {
         dirtyFields,
         isDirty,
         handleChange,
+        handleSubmit,
         resetForm,
         validate,
         watch,

@@ -30,6 +30,9 @@ interface UseForm<T> {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
+  handleSubmit: (
+    cb: () => void | Promise<void>
+  ) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   resetForm: () => void;
   validate: () => Promise<boolean>;
   watch: <K extends keyof T>(key?: K) => T[K] | T;
@@ -157,6 +160,17 @@ export const useForm = <T extends Record<string, any>>(
     [values]
   );
 
+  const handleSubmit = useCallback(
+    (cb: () => void | Promise<void>) =>
+      async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (await validate()) {
+          await cb();
+        }
+      },
+    [validate]
+  );
+
   return {
     values,
     setters,
@@ -164,6 +178,7 @@ export const useForm = <T extends Record<string, any>>(
     dirtyFields,
     isDirty,
     handleChange,
+    handleSubmit,
     resetForm,
     validate,
     watch,
