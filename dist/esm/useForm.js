@@ -63,6 +63,32 @@ export const useForm = (initialValues, validationRules) => {
             return updated;
         });
     };
+    const setFieldValue = useCallback((pathString, newValue) => {
+        setValues((prevValues) => {
+            const path = pathString
+                .replace(/\[(\w+)\]/g, ".$1")
+                .split(".")
+                .filter(Boolean)
+                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            const setNestedValue = (obj, keys, val) => {
+                var _a, _b;
+                if (!keys.length)
+                    return val;
+                const [first, ...rest] = keys;
+                if (Array.isArray(obj)) {
+                    const arr = [...obj];
+                    arr[first] = setNestedValue((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
+                    return arr;
+                }
+                return Object.assign(Object.assign({}, obj), { [first]: setNestedValue((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
+            };
+            const updated = setNestedValue(prevValues, path, newValue);
+            const topKey = path[0];
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialValues[topKey] })));
+            setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
+            return updated;
+        });
+    }, []);
     const handleBlur = (e) => {
         const path = e.target.name
             .replace(/\[(\w+)\]/g, ".$1")
@@ -117,5 +143,6 @@ export const useForm = (initialValues, validationRules) => {
         resetForm,
         validate,
         watch,
+        setFieldValue,
     };
 };

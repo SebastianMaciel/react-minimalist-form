@@ -282,6 +282,16 @@ const ComplexForm = () => {
 };
 ```
 
+You can also update fields programmatically using the same path syntax:
+
+```tsx
+const { setFieldValue } = useForm({
+  user: { address: { city: "" } },
+});
+
+setFieldValue("user.address.city", "New York");
+```
+
 ## API
 
 `useForm<T>(initialValues: T, validationRules?: ValidationRules<T>): UseForm<T>`
@@ -302,6 +312,7 @@ A custom hook that provides utilities for managing form state.
 - `handleBlur`: Marks a field as touched when an input loses focus.
 - `resetForm`: Resets the form to its initial values.
 - `watch`: A function to track specific fields or the entire form state in real-time.
+- `setFieldValue`: Programmatically update any field by path.
 - `errors`: Object containing validation errors.
 - `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
 - `dirtyFields`: Object tracking which fields have been modified.
@@ -326,6 +337,7 @@ const {
   resetForm,
   validate,
   watch,
+  setFieldValue,
 } = useForm(
   { username: "", email: "" },
   {
