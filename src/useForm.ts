@@ -1,5 +1,12 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 
+const parsePath = (path: string): (string | number)[] =>
+  path
+    .replace(/\[(\w+)\]/g, ".$1")
+    .split(".")
+    .filter(Boolean)
+    .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+
 type FormValues<T> = T & Record<string, any>;
 
 type Setters<T> = {
@@ -138,11 +145,7 @@ export const useForm = <T extends Record<string, any>>(
     }
 
     setValues((prevValues) => {
-      const path = name
-        .replace(/\[(\w+)\]/g, ".$1")
-        .split(".")
-        .filter(Boolean)
-        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+      const path = parsePath(name);
 
       const setNestedValue = (
         obj: any,
@@ -190,11 +193,7 @@ export const useForm = <T extends Record<string, any>>(
   const setFieldValue = useCallback(
     (pathString: string, newValue: any) => {
       setValues((prevValues) => {
-        const path = pathString
-          .replace(/\[(\w+)\]/g, ".$1")
-          .split(".")
-          .filter(Boolean)
-          .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const path = parsePath(pathString);
 
         const setNestedValue = (
           obj: any,
@@ -243,11 +242,7 @@ export const useForm = <T extends Record<string, any>>(
 
   const registerField = useCallback(
     (pathString: string, initialValue: any) => {
-      const path = pathString
-        .replace(/\[(\w+)\]/g, ".$1")
-        .split(".")
-        .filter(Boolean)
-        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+      const path = parsePath(pathString);
 
       const setNested = (
         obj: any,
@@ -305,10 +300,7 @@ export const useForm = <T extends Record<string, any>>(
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const path = e.target.name
-      .replace(/\[(\w+)\]/g, ".$1")
-      .split(".")
-      .filter(Boolean);
+    const path = parsePath(e.target.name);
     const topKey = path[0] as string;
     setTouchedFields((t) => ({
       ...t,
@@ -337,11 +329,7 @@ export const useForm = <T extends Record<string, any>>(
   };
 
   const resetField = (pathString: string) => {
-    const path = pathString
-      .replace(/\[(\w+)\]/g, ".$1")
-      .split(".")
-      .filter(Boolean)
-      .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+    const path = parsePath(pathString);
     const topKey = path[0] as string;
 
     const getNested = (obj: any, keys: (string | number)[]): any =>
@@ -388,7 +376,7 @@ export const useForm = <T extends Record<string, any>>(
       setErrors({});
       return;
     }
-    const normalized = pathString.replace(/\[(\w+)\]/g, ".$1").replace(/^\./, "");
+    const normalized = parsePath(pathString).join(".");
     setErrors((e) => {
       const ne = { ...e };
       if (normalized in ne) {
