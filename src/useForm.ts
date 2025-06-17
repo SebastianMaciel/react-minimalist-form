@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 
 type FormValues<T> = {
   [K in keyof T]: T[K];
@@ -41,7 +41,7 @@ interface UseForm<T> {
   handleSubmit: (
     cb: () => void | Promise<void>
   ) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
-  resetForm: () => void;
+  resetForm: (nextInitial?: T) => void;
   validate: () => Promise<boolean>;
   watch: {
     (): T;
@@ -55,32 +55,34 @@ export const useForm = <T extends Record<string, any>>(
   initialValues: T,
   validationRules?: ValidationRules<T>
 ): UseForm<T> => {
-  const [values, setValues] = useState<FormValues<T>>(initialValues);
+  const initialRef = useRef(initialValues);
+  const [values, setValues] = useState<FormValues<T>>(initialRef.current);
   const [errors, setErrors] = useState<Errors<T>>({});
-  const initialDirty = Object.keys(initialValues).reduce((acc, key) => {
+  const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
     acc[key as keyof T] = false;
     return acc;
   }, {} as DirtyFields<T>);
   const [dirtyFields, setDirtyFields] = useState<DirtyFields<T>>(initialDirty);
-  const initialTouched = Object.keys(initialValues).reduce((acc, key) => {
+  const initialTouched = Object.keys(initialRef.current).reduce((acc, key) => {
     acc[key as keyof T] = false;
     return acc;
   }, {} as TouchedFields<T>);
   const [touchedFields, setTouchedFields] = useState<TouchedFields<T>>(initialTouched);
-  const isDirty = Object.keys(initialValues).some(
+  const isDirty = Object.keys(initialRef.current).some(
     (k) => dirtyFields[k as keyof T]
   );
-  const isTouched = Object.keys(initialValues).some(
+  const isTouched = Object.keys(initialRef.current).some(
     (k) => touchedFields[k as keyof T]
   );
 
-  const setters = Object.keys(initialValues).reduce((acc, key) => {
+  const setters = Object.keys(initialRef.current).reduce((acc, key) => {
     acc[key as keyof T] = (value: any) => {
       setValues((prevValues) => {
         const newValues = { ...prevValues, [key]: value };
         setDirtyFields((d) => ({
           ...d,
-          [key]: newValues[key as keyof T] !== initialValues[key as keyof T],
+          [key]:
+            newValues[key as keyof T] !== initialRef.current[key as keyof T],
         }));
         return newValues;
       });
@@ -139,7 +141,7 @@ export const useForm = <T extends Record<string, any>>(
       const topKey = path[0] as keyof T;
       setDirtyFields((d) => ({
         ...d,
-        [topKey]: updated[topKey] !== initialValues[topKey],
+        [topKey]: updated[topKey] !== initialRef.current[topKey],
       }));
       setTouchedFields((t) => ({
         ...t,
@@ -191,7 +193,7 @@ export const useForm = <T extends Record<string, any>>(
         const topKey = path[0] as keyof T;
         setDirtyFields((d) => ({
           ...d,
-          [topKey]: updated[topKey] !== initialValues[topKey],
+          [topKey]: updated[topKey] !== initialRef.current[topKey],
         }));
         setTouchedFields((t) => ({
           ...t,
@@ -219,11 +221,23 @@ export const useForm = <T extends Record<string, any>>(
     }));
   };
 
-  const resetForm = () => {
-    setValues(initialValues);
+  const resetForm = (nextInitial?: T) => {
+    if (nextInitial) {
+      initialRef.current = nextInitial;
+    }
+    const base = nextInitial ?? initialRef.current;
+    setValues(base);
     setErrors({});
-    setDirtyFields(initialDirty);
-    setTouchedFields(initialTouched);
+    const newDirty = Object.keys(initialRef.current).reduce((acc, key) => {
+      acc[key as keyof T] = false;
+      return acc;
+    }, {} as DirtyFields<T>);
+    setDirtyFields(newDirty);
+    const newTouched = Object.keys(initialRef.current).reduce((acc, key) => {
+      acc[key as keyof T] = false;
+      return acc;
+    }, {} as TouchedFields<T>);
+    setTouchedFields(newTouched);
   };
 
   const validate = useCallback(async (): Promise<boolean> => {

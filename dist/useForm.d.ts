@@ -18,7 +18,7 @@ interface UseForm<T> {
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     handleBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     handleSubmit: (cb: () => void | Promise<void>) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
-    resetForm: () => void;
+    resetForm: (nextInitial?: T) => void;
     validate: () => Promise<boolean>;
     watch: {
         (): T;

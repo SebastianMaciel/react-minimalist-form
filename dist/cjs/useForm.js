@@ -12,25 +12,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useForm = void 0;
 const react_1 = require("react");
 const useForm = (initialValues, validationRules) => {
-    const [values, setValues] = (0, react_1.useState)(initialValues);
+    const initialRef = (0, react_1.useRef)(initialValues);
+    const [values, setValues] = (0, react_1.useState)(initialRef.current);
     const [errors, setErrors] = (0, react_1.useState)({});
-    const initialDirty = Object.keys(initialValues).reduce((acc, key) => {
+    const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = false;
         return acc;
     }, {});
     const [dirtyFields, setDirtyFields] = (0, react_1.useState)(initialDirty);
-    const initialTouched = Object.keys(initialValues).reduce((acc, key) => {
+    const initialTouched = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = false;
         return acc;
     }, {});
     const [touchedFields, setTouchedFields] = (0, react_1.useState)(initialTouched);
-    const isDirty = Object.keys(initialValues).some((k) => dirtyFields[k]);
-    const isTouched = Object.keys(initialValues).some((k) => touchedFields[k]);
-    const setters = Object.keys(initialValues).reduce((acc, key) => {
+    const isDirty = Object.keys(initialRef.current).some((k) => dirtyFields[k]);
+    const isTouched = Object.keys(initialRef.current).some((k) => touchedFields[k]);
+    const setters = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = (value) => {
             setValues((prevValues) => {
                 const newValues = Object.assign(Object.assign({}, prevValues), { [key]: value });
-                setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [key]: newValues[key] !== initialValues[key] })));
+                setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [key]: newValues[key] !== initialRef.current[key] })));
                 return newValues;
             });
         };
@@ -61,7 +62,7 @@ const useForm = (initialValues, validationRules) => {
             };
             const updated = setNestedValue(prevValues, path, newValue);
             const topKey = path[0];
-            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialValues[topKey] })));
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
             setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
             return updated;
         });
@@ -87,7 +88,7 @@ const useForm = (initialValues, validationRules) => {
             };
             const updated = setNestedValue(prevValues, path, newValue);
             const topKey = path[0];
-            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialValues[topKey] })));
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
             setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
             return updated;
         });
@@ -100,11 +101,23 @@ const useForm = (initialValues, validationRules) => {
         const topKey = path[0];
         setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
     };
-    const resetForm = () => {
-        setValues(initialValues);
+    const resetForm = (nextInitial) => {
+        if (nextInitial) {
+            initialRef.current = nextInitial;
+        }
+        const base = nextInitial !== null && nextInitial !== void 0 ? nextInitial : initialRef.current;
+        setValues(base);
         setErrors({});
-        setDirtyFields(initialDirty);
-        setTouchedFields(initialTouched);
+        const newDirty = Object.keys(initialRef.current).reduce((acc, key) => {
+            acc[key] = false;
+            return acc;
+        }, {});
+        setDirtyFields(newDirty);
+        const newTouched = Object.keys(initialRef.current).reduce((acc, key) => {
+            acc[key] = false;
+            return acc;
+        }, {});
+        setTouchedFields(newTouched);
     };
     const validate = (0, react_1.useCallback)(() => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRules) {
