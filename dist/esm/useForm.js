@@ -7,11 +7,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 export const useForm = (initialValues, validationRules) => {
     const initialRef = useRef(initialValues);
     const [values, setValues] = useState(initialRef.current);
     const [errors, setErrors] = useState({});
+    const [isValid, setIsValid] = useState(true);
     const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
         acc[key] = false;
         return acc;
@@ -105,6 +106,7 @@ export const useForm = (initialValues, validationRules) => {
         const base = nextInitial !== null && nextInitial !== void 0 ? nextInitial : initialRef.current;
         setValues(base);
         setErrors({});
+        setIsValid(true);
         const newDirty = Object.keys(initialRef.current).reduce((acc, key) => {
             acc[key] = false;
             return acc;
@@ -116,23 +118,34 @@ export const useForm = (initialValues, validationRules) => {
         }, {});
         setTouchedFields(newTouched);
     };
-    const validate = useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
+    const runValidation = useCallback((vals) => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRules) {
+            setIsValid(true);
             return true;
         }
         const newErrors = {};
         yield Promise.all(Object.keys(validationRules).map((key) => __awaiter(void 0, void 0, void 0, function* () {
             const rule = validationRules[key];
             if (rule) {
-                const error = yield rule(values[key], values);
+                const error = yield rule(vals[key], vals);
                 if (error) {
                     newErrors[key] = error;
                 }
             }
         })));
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    }), [validationRules, values]);
+        const valid = Object.keys(newErrors).length === 0;
+        setIsValid(valid);
+        return valid;
+    }), [validationRules]);
+    const validate = useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
+        return runValidation(values);
+    }), [runValidation, values]);
+    useEffect(() => {
+        if (validationRules) {
+            runValidation(values);
+        }
+    }, [values, touchedFields, runValidation, validationRules]);
     function watch(path) {
         if (!path) {
             return values;
@@ -158,6 +171,7 @@ export const useForm = (initialValues, validationRules) => {
         values,
         setters,
         errors,
+        isValid,
         dirtyFields,
         isDirty,
         touchedFields,

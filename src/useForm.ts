@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 
 type FormValues<T> = {
   [K in keyof T]: T[K];
@@ -24,6 +24,7 @@ interface UseForm<T> {
   values: T;
   setters: Setters<T>;
   errors: Errors<T>;
+  isValid: boolean;
   dirtyFields: DirtyFields<T>;
   isDirty: boolean;
   touchedFields: TouchedFields<T>;
@@ -58,6 +59,7 @@ export const useForm = <T extends Record<string, any>>(
   const initialRef = useRef(initialValues);
   const [values, setValues] = useState<FormValues<T>>(initialRef.current);
   const [errors, setErrors] = useState<Errors<T>>({});
+  const [isValid, setIsValid] = useState(true);
   const initialDirty = Object.keys(initialRef.current).reduce((acc, key) => {
     acc[key as keyof T] = false;
     return acc;
@@ -228,6 +230,7 @@ export const useForm = <T extends Record<string, any>>(
     const base = nextInitial ?? initialRef.current;
     setValues(base);
     setErrors({});
+    setIsValid(true);
     const newDirty = Object.keys(initialRef.current).reduce((acc, key) => {
       acc[key as keyof T] = false;
       return acc;
@@ -240,28 +243,44 @@ export const useForm = <T extends Record<string, any>>(
     setTouchedFields(newTouched);
   };
 
-  const validate = useCallback(async (): Promise<boolean> => {
-    if (!validationRules) {
-      return true;
-    }
+  const runValidation = useCallback(
+    async (vals: T): Promise<boolean> => {
+      if (!validationRules) {
+        setIsValid(true);
+        return true;
+      }
 
-    const newErrors: Errors<T> = {};
+      const newErrors: Errors<T> = {};
 
-    await Promise.all(
-      Object.keys(validationRules).map(async (key) => {
-        const rule = validationRules[key as keyof T];
-        if (rule) {
-          const error = await rule(values[key as keyof T], values);
-          if (error) {
-            newErrors[key as keyof T] = error;
+      await Promise.all(
+        Object.keys(validationRules).map(async (key) => {
+          const rule = validationRules[key as keyof T];
+          if (rule) {
+            const error = await rule(vals[key as keyof T], vals);
+            if (error) {
+              newErrors[key as keyof T] = error;
+            }
           }
-        }
-      })
-    );
+        })
+      );
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [validationRules, values]);
+      setErrors(newErrors);
+      const valid = Object.keys(newErrors).length === 0;
+      setIsValid(valid);
+      return valid;
+    },
+    [validationRules]
+  );
+
+  const validate = useCallback(async (): Promise<boolean> => {
+    return runValidation(values);
+  }, [runValidation, values]);
+
+  useEffect(() => {
+    if (validationRules) {
+      runValidation(values);
+    }
+  }, [values, touchedFields, runValidation, validationRules]);
 
   function watch(): T;
   function watch<K extends keyof T>(key: K): T[K];
@@ -304,6 +323,7 @@ export const useForm = <T extends Record<string, any>>(
     values,
     setters,
     errors,
+    isValid,
     dirtyFields,
     isDirty,
     touchedFields,

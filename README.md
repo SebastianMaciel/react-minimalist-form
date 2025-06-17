@@ -332,6 +332,7 @@ A custom hook that provides utilities for managing form state.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `setFieldValue`: Programmatically update any field by path.
 - `errors`: Object containing validation errors.
+- `isValid`: `true` when the form has no validation errors.
 - `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
 - `dirtyFields`: Object tracking which fields have been modified.
 - `isDirty`: `true` when any field has changed.
@@ -344,6 +345,7 @@ A custom hook that provides utilities for managing form state.
 const {
   values,
   errors,
+  isValid,
   setters,
   dirtyFields,
   isDirty,
