@@ -131,10 +131,16 @@ export const useForm = (initialValues, validationRules, config = {}) => {
             }
             return Object.assign(Object.assign({}, obj), { [first]: setNested((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
         };
-        setValues((prev) => setNested(prev, path, initialValue));
-        initialRef.current = setNested(initialRef.current, path, initialValue);
-        setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [pathString]: false })));
-        setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [pathString]: false })));
+        const topKey = path[0];
+        // update baseline first so dirtiness check uses the latest initial values
+        const nextInitial = setNested(initialRef.current, path, initialValue);
+        initialRef.current = nextInitial;
+        setValues((prev) => {
+            const updated = setNested(prev, path, initialValue);
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
+            setTouchedFields((t) => t[topKey] === undefined ? Object.assign(Object.assign({}, t), { [topKey]: false }) : t);
+            return updated;
+        });
         if (!(pathString in validationRulesRef.current)) {
             validationRulesRef.current[pathString] = undefined;
         }
