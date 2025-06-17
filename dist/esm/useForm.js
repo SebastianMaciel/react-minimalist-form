@@ -19,6 +19,11 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 import { useCallback, useState, useRef, useEffect } from "react";
+const parsePath = (path) => path
+    .replace(/\[(\w+)\]/g, ".$1")
+    .split(".")
+    .filter(Boolean)
+    .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
 export const useForm = (initialValues, validationRules, config = {}) => {
     const { validateOnChange = true, validateOnBlur = true } = config;
     const initialRef = useRef(initialValues);
@@ -74,11 +79,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
             newValue = value;
         }
         setValues((prevValues) => {
-            const path = name
-                .replace(/\[(\w+)\]/g, ".$1")
-                .split(".")
-                .filter(Boolean)
-                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            const path = parsePath(name);
             const setNestedValue = (obj, keys, val) => {
                 var _a, _b;
                 if (!keys.length)
@@ -100,11 +101,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     };
     const setFieldValue = useCallback((pathString, newValue) => {
         setValues((prevValues) => {
-            const path = pathString
-                .replace(/\[(\w+)\]/g, ".$1")
-                .split(".")
-                .filter(Boolean)
-                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            const path = parsePath(pathString);
             const setNestedValue = (obj, keys, val) => {
                 var _a, _b;
                 if (!keys.length)
@@ -125,11 +122,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         });
     }, []);
     const registerField = useCallback((pathString, initialValue) => {
-        const path = pathString
-            .replace(/\[(\w+)\]/g, ".$1")
-            .split(".")
-            .filter(Boolean)
-            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const path = parsePath(pathString);
         const setNested = (obj, keys, val) => {
             var _a, _b;
             if (!keys.length)
@@ -157,10 +150,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         }
     }, []);
     const handleBlur = (e) => {
-        const path = e.target.name
-            .replace(/\[(\w+)\]/g, ".$1")
-            .split(".")
-            .filter(Boolean);
+        const path = parsePath(e.target.name);
         const topKey = path[0];
         setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
     };
@@ -184,11 +174,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         setTouchedFields(newTouched);
     };
     const resetField = (pathString) => {
-        const path = pathString
-            .replace(/\[(\w+)\]/g, ".$1")
-            .split(".")
-            .filter(Boolean)
-            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const path = parsePath(pathString);
         const topKey = path[0];
         const getNested = (obj, keys) => keys.reduce((acc, key) => acc === null || acc === void 0 ? void 0 : acc[key], obj);
         const initialVal = getNested(initialRef.current, path);
@@ -216,7 +202,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
             setErrors({});
             return;
         }
-        const normalized = pathString.replace(/\[(\w+)\]/g, ".$1").replace(/^\./, "");
+        const normalized = parsePath(pathString).join(".");
         setErrors((e) => {
             const ne = Object.assign({}, e);
             if (normalized in ne) {
@@ -280,7 +266,9 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         yield Promise.all(Object.keys(validationRulesRef.current).map((key) => __awaiter(void 0, void 0, void 0, function* () {
             const rule = validationRulesRef.current[key];
             if (rule) {
-                const error = yield rule(vals[key], vals);
+                const path = parsePath(key);
+                const value = path.reduce((acc, seg) => acc === null || acc === void 0 ? void 0 : acc[seg], vals);
+                const error = yield rule(value, vals);
                 if (error) {
                     newErrors[key] = error;
                 }
