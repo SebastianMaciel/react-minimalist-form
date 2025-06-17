@@ -4,4 +4,4 @@ coverage
 .gitignore
 .npmignore
 src
-tsconfig.json
+tsconfig*.json
