@@ -37,9 +37,28 @@ export const useForm = (initialValues, validationRules) => {
     }, {});
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-        const newValue = type === "checkbox" && e.target instanceof HTMLInputElement
-            ? e.target.checked
-            : value;
+        if (type === "radio" &&
+            e.target instanceof HTMLInputElement &&
+            !e.target.checked) {
+            return;
+        }
+        let newValue;
+        if (type === "checkbox" && e.target instanceof HTMLInputElement) {
+            newValue = e.target.checked;
+        }
+        else if (type === "number" && e.target instanceof HTMLInputElement) {
+            newValue = e.target.valueAsNumber;
+        }
+        else if (type === "file" && e.target instanceof HTMLInputElement) {
+            newValue = e.target.files;
+        }
+        else if (e.target instanceof HTMLSelectElement &&
+            e.target.multiple) {
+            newValue = Array.from(e.target.selectedOptions).map((o) => o.value);
+        }
+        else {
+            newValue = value;
+        }
         setValues((prevValues) => {
             const path = name
                 .replace(/\[(\w+)\]/g, ".$1")
