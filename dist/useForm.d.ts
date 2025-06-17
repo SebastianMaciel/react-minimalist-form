@@ -7,6 +7,10 @@ export type ValidationRules<T> = {
 type Errors<T> = Partial<Record<keyof T, string>>;
 type DirtyFields<T> = Record<keyof T, boolean>;
 type TouchedFields<T> = Record<keyof T, boolean>;
+export interface UseFormConfig {
+    validateOnChange?: boolean;
+    validateOnBlur?: boolean;
+}
 interface UseForm<T> {
     values: T;
     setters: Setters<T>;
@@ -28,5 +32,5 @@ interface UseForm<T> {
     };
     setFieldValue: (path: string, value: any) => void;
 }
-export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>) => UseForm<T>;
+export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>, config?: UseFormConfig) => UseForm<T>;
 export {};

@@ -28,6 +28,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 ✅ Field-level Validation: Pass custom (sync or async) validation rules that receive both the field value and the full form state.
 
 ❌ Optional Validation: Define validation rules and control error state when needed.
+⚙️ Configurable Validation Triggers: Choose to validate on change, blur, or both.
 
 🌳 Nested Names: Use dot or bracket notation in `name` attributes to update nested fields automatically.
 
@@ -334,7 +335,7 @@ setFieldValue("user.address.city", "New York");
 
 ## API
 
-`useForm<T>(initialValues: T, validationRules?: ValidationRules<T>): UseForm<T>`
+`useForm<T>(initialValues: T, validationRules?: ValidationRules<T>, config?: { validateOnChange?: boolean; validateOnBlur?: boolean }): UseForm<T>`
 
 A custom hook that provides utilities for managing form state.
 
@@ -342,6 +343,7 @@ A custom hook that provides utilities for managing form state.
 
 - `initialValues`: An object representing the initial state of your form. The shape of this object defines the structure of the form.
 - `validationRules` *(optional)*: An object with validation functions (sync or async) for each field.
+- `config` *(optional)*: Object with `validateOnChange` and `validateOnBlur` booleans (both default to `true`) that control when automatic validation runs.
 
 #### Returns
 
@@ -384,6 +386,9 @@ const {
   { username: "", email: "" },
   {
     username: (v) => (!v ? "Required" : null),
+  },
+  {
+    validateOnChange: false,
   }
 );
 ```

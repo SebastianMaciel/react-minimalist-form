@@ -8,7 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { useCallback, useState, useRef, useEffect } from "react";
-export const useForm = (initialValues, validationRules) => {
+export const useForm = (initialValues, validationRules, config = {}) => {
+    const { validateOnChange = true, validateOnBlur = true } = config;
     const initialRef = useRef(initialValues);
     const [values, setValues] = useState(initialRef.current);
     const [errors, setErrors] = useState({});
@@ -161,10 +162,15 @@ export const useForm = (initialValues, validationRules) => {
         return runValidation(values);
     }), [runValidation, values]);
     useEffect(() => {
-        if (validationRules) {
+        if (validateOnChange && validationRules) {
             runValidation(values);
         }
-    }, [values, touchedFields, runValidation, validationRules]);
+    }, [values, validateOnChange, runValidation, validationRules]);
+    useEffect(() => {
+        if (validateOnBlur && validationRules) {
+            runValidation(values);
+        }
+    }, [touchedFields, validateOnBlur, runValidation, validationRules]);
     function watch(path) {
         if (!path) {
             return values;

@@ -20,6 +20,11 @@ type Errors<T> = Partial<Record<keyof T, string>>;
 type DirtyFields<T> = Record<keyof T, boolean>;
 type TouchedFields<T> = Record<keyof T, boolean>;
 
+export interface UseFormConfig {
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+}
+
 interface UseForm<T> {
   values: T;
   setters: Setters<T>;
@@ -54,8 +59,10 @@ interface UseForm<T> {
 
 export const useForm = <T extends Record<string, any>>(
   initialValues: T,
-  validationRules?: ValidationRules<T>
+  validationRules?: ValidationRules<T>,
+  config: UseFormConfig = {}
 ): UseForm<T> => {
+  const { validateOnChange = true, validateOnBlur = true } = config;
   const initialRef = useRef(initialValues);
   const [values, setValues] = useState<FormValues<T>>(initialRef.current);
   const [errors, setErrors] = useState<Errors<T>>({});
@@ -298,10 +305,16 @@ export const useForm = <T extends Record<string, any>>(
   }, [runValidation, values]);
 
   useEffect(() => {
-    if (validationRules) {
+    if (validateOnChange && validationRules) {
       runValidation(values);
     }
-  }, [values, touchedFields, runValidation, validationRules]);
+  }, [values, validateOnChange, runValidation, validationRules]);
+
+  useEffect(() => {
+    if (validateOnBlur && validationRules) {
+      runValidation(values);
+    }
+  }, [touchedFields, validateOnBlur, runValidation, validationRules]);
 
   function watch(): T;
   function watch<K extends keyof T>(key: K): T[K];
