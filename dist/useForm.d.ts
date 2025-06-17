@@ -5,10 +5,13 @@ export type ValidationRules<T> = {
     [K in keyof T]?: (value: T[K], values: T) => string | null;
 };
 type Errors<T> = Partial<Record<keyof T, string>>;
+type DirtyFields<T> = Record<keyof T, boolean>;
 interface UseForm<T> {
     values: T;
     setters: Setters<T>;
     errors: Errors<T>;
+    dirtyFields: DirtyFields<T>;
+    isDirty: boolean;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     resetForm: () => void;
     validate: () => boolean;
