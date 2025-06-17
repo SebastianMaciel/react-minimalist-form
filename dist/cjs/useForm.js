@@ -208,12 +208,16 @@ const useForm = (initialValues, validationRules, config = {}) => {
             setErrors({});
             return;
         }
-        const key = pathString
-            .replace(/\[(\w+)\]/g, ".$1")
-            .split(".")[0];
+        const normalized = pathString.replace(/\[(\w+)\]/g, ".$1").replace(/^\./, "");
         setErrors((e) => {
             const ne = Object.assign({}, e);
-            delete ne[key];
+            if (normalized in ne) {
+                delete ne[normalized];
+            }
+            else {
+                const topKey = normalized.split(".")[0];
+                delete ne[topKey];
+            }
             return ne;
         });
     };
