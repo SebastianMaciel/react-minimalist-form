@@ -7,6 +7,58 @@ const parsePath = (path: string): (string | number)[] =>
     .filter(Boolean)
     .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
 
+const setNestedValue = (
+  obj: any,
+  keys: (string | number)[],
+  val: any,
+): any => {
+  if (!keys.length) return val;
+
+  const [first, ...rest] = keys;
+
+  if (Array.isArray(obj)) {
+    const arr = [...obj];
+    arr[first as number] = setNestedValue(
+      arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
+      rest,
+      val,
+    );
+    return arr;
+  }
+
+  return {
+    ...obj,
+    [first]: setNestedValue(
+      obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
+      rest,
+      val,
+    ),
+  };
+};
+
+const removeNestedValue = (obj: any, keys: (string | number)[]): any => {
+  if (!obj) return obj;
+  const [first, ...rest] = keys;
+  if (rest.length === 0) {
+    if (Array.isArray(obj)) {
+      const arr = [...obj];
+      arr.splice(first as number, 1);
+      return arr;
+    }
+    const { [first as string]: _omit, ...restObj } = obj;
+    return restObj;
+  }
+  if (Array.isArray(obj)) {
+    const arr = [...obj];
+    arr[first as number] = removeNestedValue(arr[first as number], rest);
+    return arr;
+  }
+  return {
+    ...obj,
+    [first]: removeNestedValue(obj[first], rest),
+  };
+};
+
 type FormValues<T> = T & Record<string, any>;
 
 type Setters<T> = {
@@ -147,35 +199,6 @@ export const useForm = <T extends Record<string, any>>(
     setValues((prevValues) => {
       const path = parsePath(name);
 
-      const setNestedValue = (
-        obj: any,
-        keys: (string | number)[],
-        val: any,
-      ): any => {
-        if (!keys.length) return val;
-
-        const [first, ...rest] = keys;
-
-        if (Array.isArray(obj)) {
-          const arr = [...obj];
-          arr[first as number] = setNestedValue(
-            arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val,
-          );
-          return arr;
-        }
-
-        return {
-          ...obj,
-          [first]: setNestedValue(
-            obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val,
-          ),
-        };
-      };
-
       const updated = setNestedValue(prevValues, path, newValue);
       const topKey = path[0] as string;
       setDirtyFields((d) => ({
@@ -194,35 +217,6 @@ export const useForm = <T extends Record<string, any>>(
     (pathString: string, newValue: any) => {
       setValues((prevValues) => {
         const path = parsePath(pathString);
-
-        const setNestedValue = (
-          obj: any,
-          keys: (string | number)[],
-          val: any,
-        ): any => {
-          if (!keys.length) return val;
-
-          const [first, ...rest] = keys;
-
-          if (Array.isArray(obj)) {
-            const arr = [...obj];
-            arr[first as number] = setNestedValue(
-              arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
-              rest,
-              val,
-            );
-            return arr;
-          }
-
-          return {
-            ...obj,
-            [first]: setNestedValue(
-              obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
-              rest,
-              val,
-            ),
-          };
-        };
 
         const updated = setNestedValue(prevValues, path, newValue);
         const topKey = path[0] as string;
@@ -244,40 +238,14 @@ export const useForm = <T extends Record<string, any>>(
     (pathString: string, initialValue: any) => {
       const path = parsePath(pathString);
 
-      const setNested = (
-        obj: any,
-        keys: (string | number)[],
-        val: any
-      ): any => {
-        if (!keys.length) return val;
-        const [first, ...rest] = keys;
-        if (Array.isArray(obj)) {
-          const arr = [...obj];
-          arr[first as number] = setNested(
-            arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val
-          );
-          return arr;
-        }
-        return {
-          ...obj,
-          [first]: setNested(
-            obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val
-          )
-        };
-      };
-
       const topKey = path[0] as string;
 
       // update baseline first so dirtiness check uses the latest initial values
-      const nextInitial = setNested(initialRef.current, path, initialValue);
+      const nextInitial = setNestedValue(initialRef.current, path, initialValue);
       initialRef.current = nextInitial;
 
       setValues((prev) => {
-        const updated = setNested(prev, path, initialValue);
+        const updated = setNestedValue(prev, path, initialValue);
         setDirtyFields((d) => ({
           ...d,
           [topKey]:
@@ -337,33 +305,7 @@ export const useForm = <T extends Record<string, any>>(
     const initialVal = getNested(initialRef.current, path);
 
     setValues((prev) => {
-      const setNested = (
-        obj: any,
-        keys: (string | number)[],
-        val: any,
-      ): any => {
-        if (!keys.length) return val;
-        const [first, ...rest] = keys;
-        if (Array.isArray(obj)) {
-          const arr = [...obj];
-          arr[first as number] = setNested(
-            arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val,
-          );
-          return arr;
-        }
-        return {
-          ...obj,
-          [first]: setNested(
-            obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
-            rest,
-            val,
-          ),
-        };
-      };
-
-      const updated = setNested(prev, path, initialVal);
+      const updated = setNestedValue(prev, path, initialVal);
       return updated;
     });
 
@@ -392,35 +334,12 @@ export const useForm = <T extends Record<string, any>>(
   const unregisterField = useCallback((pathString: string) => {
     const path = parsePath(pathString);
 
-    const removeNested = (obj: any, keys: (string | number)[]): any => {
-      if (!obj) return obj;
-      const [first, ...rest] = keys;
-      if (rest.length === 0) {
-        if (Array.isArray(obj)) {
-          const arr = [...obj];
-          arr.splice(first as number, 1);
-          return arr;
-        }
-        const { [first as string]: _omit, ...restObj } = obj;
-        return restObj;
-      }
-      if (Array.isArray(obj)) {
-        const arr = [...obj];
-        arr[first as number] = removeNested(arr[first as number], rest);
-        return arr;
-      }
-      return {
-        ...obj,
-        [first]: removeNested(obj[first], rest),
-      };
-    };
-
     const topKey = path[0] as string;
 
-    initialRef.current = removeNested(initialRef.current, path);
+    initialRef.current = removeNestedValue(initialRef.current, path);
 
     setValues((prev) => {
-      const updated = removeNested(prev, path);
+      const updated = removeNestedValue(prev, path);
       setDirtyFields((d) => ({
         ...d,
         [topKey]:

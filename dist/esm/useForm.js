@@ -24,6 +24,38 @@ const parsePath = (path) => path
     .split(".")
     .filter(Boolean)
     .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+const setNestedValue = (obj, keys, val) => {
+    var _a, _b;
+    if (!keys.length)
+        return val;
+    const [first, ...rest] = keys;
+    if (Array.isArray(obj)) {
+        const arr = [...obj];
+        arr[first] = setNestedValue((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
+        return arr;
+    }
+    return Object.assign(Object.assign({}, obj), { [first]: setNestedValue((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
+};
+const removeNestedValue = (obj, keys) => {
+    if (!obj)
+        return obj;
+    const [first, ...rest] = keys;
+    if (rest.length === 0) {
+        if (Array.isArray(obj)) {
+            const arr = [...obj];
+            arr.splice(first, 1);
+            return arr;
+        }
+        const _a = obj, _b = first, _omit = _a[_b], restObj = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+        return restObj;
+    }
+    if (Array.isArray(obj)) {
+        const arr = [...obj];
+        arr[first] = removeNestedValue(arr[first], rest);
+        return arr;
+    }
+    return Object.assign(Object.assign({}, obj), { [first]: removeNestedValue(obj[first], rest) });
+};
 export const useForm = (initialValues, validationRules, config = {}) => {
     const { validateOnChange = true, validateOnBlur = true } = config;
     const initialRef = useRef(initialValues);
@@ -80,18 +112,6 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         }
         setValues((prevValues) => {
             const path = parsePath(name);
-            const setNestedValue = (obj, keys, val) => {
-                var _a, _b;
-                if (!keys.length)
-                    return val;
-                const [first, ...rest] = keys;
-                if (Array.isArray(obj)) {
-                    const arr = [...obj];
-                    arr[first] = setNestedValue((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
-                    return arr;
-                }
-                return Object.assign(Object.assign({}, obj), { [first]: setNestedValue((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
-            };
             const updated = setNestedValue(prevValues, path, newValue);
             const topKey = path[0];
             setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
@@ -102,18 +122,6 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     const setFieldValue = useCallback((pathString, newValue) => {
         setValues((prevValues) => {
             const path = parsePath(pathString);
-            const setNestedValue = (obj, keys, val) => {
-                var _a, _b;
-                if (!keys.length)
-                    return val;
-                const [first, ...rest] = keys;
-                if (Array.isArray(obj)) {
-                    const arr = [...obj];
-                    arr[first] = setNestedValue((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
-                    return arr;
-                }
-                return Object.assign(Object.assign({}, obj), { [first]: setNestedValue((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
-            };
             const updated = setNestedValue(prevValues, path, newValue);
             const topKey = path[0];
             setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
@@ -123,24 +131,12 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     }, []);
     const registerField = useCallback((pathString, initialValue) => {
         const path = parsePath(pathString);
-        const setNested = (obj, keys, val) => {
-            var _a, _b;
-            if (!keys.length)
-                return val;
-            const [first, ...rest] = keys;
-            if (Array.isArray(obj)) {
-                const arr = [...obj];
-                arr[first] = setNested((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
-                return arr;
-            }
-            return Object.assign(Object.assign({}, obj), { [first]: setNested((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
-        };
         const topKey = path[0];
         // update baseline first so dirtiness check uses the latest initial values
-        const nextInitial = setNested(initialRef.current, path, initialValue);
+        const nextInitial = setNestedValue(initialRef.current, path, initialValue);
         initialRef.current = nextInitial;
         setValues((prev) => {
-            const updated = setNested(prev, path, initialValue);
+            const updated = setNestedValue(prev, path, initialValue);
             setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
             setTouchedFields((t) => t[topKey] === undefined ? Object.assign(Object.assign({}, t), { [topKey]: false }) : t);
             return updated;
@@ -179,19 +175,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         const getNested = (obj, keys) => keys.reduce((acc, key) => acc === null || acc === void 0 ? void 0 : acc[key], obj);
         const initialVal = getNested(initialRef.current, path);
         setValues((prev) => {
-            const setNested = (obj, keys, val) => {
-                var _a, _b;
-                if (!keys.length)
-                    return val;
-                const [first, ...rest] = keys;
-                if (Array.isArray(obj)) {
-                    const arr = [...obj];
-                    arr[first] = setNested((_a = arr[first]) !== null && _a !== void 0 ? _a : (typeof rest[0] === "number" ? [] : {}), rest, val);
-                    return arr;
-                }
-                return Object.assign(Object.assign({}, obj), { [first]: setNested((_b = obj === null || obj === void 0 ? void 0 : obj[first]) !== null && _b !== void 0 ? _b : (typeof rest[0] === "number" ? [] : {}), rest, val) });
-            };
-            const updated = setNested(prev, path, initialVal);
+            const updated = setNestedValue(prev, path, initialVal);
             return updated;
         });
         setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: false })));
@@ -217,30 +201,10 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     };
     const unregisterField = useCallback((pathString) => {
         const path = parsePath(pathString);
-        const removeNested = (obj, keys) => {
-            if (!obj)
-                return obj;
-            const [first, ...rest] = keys;
-            if (rest.length === 0) {
-                if (Array.isArray(obj)) {
-                    const arr = [...obj];
-                    arr.splice(first, 1);
-                    return arr;
-                }
-                const _a = obj, _b = first, _omit = _a[_b], restObj = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
-                return restObj;
-            }
-            if (Array.isArray(obj)) {
-                const arr = [...obj];
-                arr[first] = removeNested(arr[first], rest);
-                return arr;
-            }
-            return Object.assign(Object.assign({}, obj), { [first]: removeNested(obj[first], rest) });
-        };
         const topKey = path[0];
-        initialRef.current = removeNested(initialRef.current, path);
+        initialRef.current = removeNestedValue(initialRef.current, path);
         setValues((prev) => {
-            const updated = removeNested(prev, path);
+            const updated = removeNestedValue(prev, path);
             setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
             setTouchedFields((t) => {
                 if (updated[topKey] === undefined) {
