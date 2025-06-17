@@ -246,14 +246,17 @@ const useForm = (initialValues, validationRules, config = {}) => {
         };
         const topKey = path[0];
         initialRef.current = removeNested(initialRef.current, path);
-        setValues((prev) => removeNested(prev, path));
-        setDirtyFields((d) => {
-            const _a = d, _b = topKey, _omit = _a[_b], rest = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
-            return rest;
-        });
-        setTouchedFields((t) => {
-            const _a = t, _b = topKey, _omit = _a[_b], rest = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
-            return rest;
+        setValues((prev) => {
+            const updated = removeNested(prev, path);
+            setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialRef.current[topKey] })));
+            setTouchedFields((t) => {
+                if (updated[topKey] === undefined) {
+                    const _a = t, _b = topKey, _omit = _a[_b], rest = __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+                    return rest;
+                }
+                return t;
+            });
+            return updated;
         });
         clearErrors(pathString);
         if (pathString in validationRulesRef.current) {
