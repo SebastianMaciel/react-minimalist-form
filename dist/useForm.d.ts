@@ -20,7 +20,11 @@ interface UseForm<T> {
     handleSubmit: (cb: () => void | Promise<void>) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     resetForm: () => void;
     validate: () => Promise<boolean>;
-    watch: <K extends keyof T>(key?: K) => T[K] | T;
+    watch: {
+        (): T;
+        <K extends keyof T>(key: K): T[K];
+        (path: string): any;
+    };
     setFieldValue: (path: string, value: any) => void;
 }
 export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>) => UseForm<T>;

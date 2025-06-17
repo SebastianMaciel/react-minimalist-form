@@ -43,7 +43,11 @@ interface UseForm<T> {
   ) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   resetForm: () => void;
   validate: () => Promise<boolean>;
-  watch: <K extends keyof T>(key?: K) => T[K] | T;
+  watch: {
+    (): T;
+    <K extends keyof T>(key: K): T[K];
+    (path: string): any;
+  };
   setFieldValue: (path: string, value: any) => void;
 }
 
@@ -245,12 +249,31 @@ export const useForm = <T extends Record<string, any>>(
     return Object.keys(newErrors).length === 0;
   }, [validationRules, values]);
 
-  const watch = useCallback(
-    <K extends keyof T>(key?: K): T[K] | T => {
-      return key ? values[key] : values;
-    },
-    [values]
-  );
+  function watch(): T;
+  function watch<K extends keyof T>(key: K): T[K];
+  function watch(path: string): any;
+  function watch(path?: keyof T | string): any {
+    if (!path) {
+      return values;
+    }
+
+    if (typeof path === "string" && (path.includes(".") || path.includes("["))) {
+      const segments = path
+        .replace(/\[(\w+)\]/g, ".$1")
+        .split(".")
+        .filter(Boolean)
+        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+      return segments.reduce<any>((acc, seg) => acc?.[seg], values);
+    }
+
+    return values[path as keyof T];
+  }
+
+  const watchCallback = useCallback(watch, [values]) as {
+    (): T;
+    <K extends keyof T>(key: K): T[K];
+    (path: string): any;
+  };
 
   const handleSubmit = useCallback(
     (cb: () => void | Promise<void>) =>
@@ -276,7 +299,7 @@ export const useForm = <T extends Record<string, any>>(
     handleSubmit,
     resetForm,
     validate,
-    watch,
+    watch: watchCallback,
     setFieldValue,
   };
 };
