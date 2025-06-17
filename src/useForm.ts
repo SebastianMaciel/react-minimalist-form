@@ -423,15 +423,21 @@ export const useForm = <T extends Record<string, any>>(
 
     initialRef.current = removeNested(initialRef.current, path);
 
-    setValues((prev) => removeNested(prev, path));
-
-    setDirtyFields((d) => {
-      const { [topKey]: _omit, ...rest } = d;
-      return rest as DirtyFields<T>;
-    });
-    setTouchedFields((t) => {
-      const { [topKey]: _omit, ...rest } = t;
-      return rest as TouchedFields<T>;
+    setValues((prev) => {
+      const updated = removeNested(prev, path);
+      setDirtyFields((d) => ({
+        ...d,
+        [topKey]:
+          (updated as any)[topKey] !== (initialRef.current as any)[topKey],
+      }));
+      setTouchedFields((t) => {
+        if ((updated as any)[topKey] === undefined) {
+          const { [topKey]: _omit, ...rest } = t;
+          return rest as TouchedFields<T>;
+        }
+        return t;
+      });
+      return updated;
     });
 
     clearErrors(pathString);
