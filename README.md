@@ -309,6 +309,28 @@ const { setFieldValue } = useForm({
 
 setFieldValue("user.address.city", "New York");
 ```
+## Handling Special Input Types
+
+`handleChange` automatically adapts to several HTML input types:
+
+- **Radio buttons** only update state when checked.
+- **Number inputs** store the numeric value.
+- **File inputs** store the `FileList` from `e.target.files`.
+- **Multiple selects** return an array of selected values.
+
+```tsx
+<label>
+  <input type="radio" name="color" value="red" onChange={handleChange} />
+  Red
+</label>
+<input type="number" name="age" value={values.age} onChange={handleChange} />
+<input type="file" name="avatar" onChange={handleChange} />
+<select multiple name="tags" onChange={handleChange}>
+  <option value="a">A</option>
+  <option value="b">B</option>
+</select>
+```
+
 
 ## API
 
