@@ -454,7 +454,9 @@ export const useForm = <T extends Record<string, any>>(
         Object.keys(validationRulesRef.current).map(async (key) => {
           const rule = validationRulesRef.current[key];
           if (rule) {
-            const error = await rule((vals as any)[key], vals);
+            const path = parsePath(key);
+            const value = path.reduce<any>((acc, seg) => acc?.[seg], vals);
+            const error = await rule(value, vals);
             if (error) {
               newErrors[key] = error;
             }
