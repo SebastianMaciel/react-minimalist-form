@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { useCallback, useState } from "react";
 export const useForm = (initialValues, validationRules) => {
     const [values, setValues] = useState(initialValues);
@@ -52,23 +61,23 @@ export const useForm = (initialValues, validationRules) => {
         setErrors({});
         setDirtyFields(initialDirty);
     };
-    const validate = useCallback(() => {
+    const validate = useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRules) {
             return true;
         }
         const newErrors = {};
-        Object.keys(validationRules).forEach((key) => {
+        yield Promise.all(Object.keys(validationRules).map((key) => __awaiter(void 0, void 0, void 0, function* () {
             const rule = validationRules[key];
             if (rule) {
-                const error = rule(values[key], values);
+                const error = yield rule(values[key], values);
                 if (error) {
                     newErrors[key] = error;
                 }
             }
-        });
+        })));
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [validationRules, values]);
+    }), [validationRules, values]);
     const watch = useCallback((key) => {
         return key ? values[key] : values;
     }, [values]);

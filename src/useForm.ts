@@ -9,7 +9,10 @@ type Setters<T> = {
 };
 
 export type ValidationRules<T> = {
-  [K in keyof T]?: (value: T[K], values: T) => string | null;
+  [K in keyof T]?: (
+    value: T[K],
+    values: T
+  ) => string | null | Promise<string | null>;
 };
 
 type Errors<T> = Partial<Record<keyof T, string>>;
@@ -28,7 +31,7 @@ interface UseForm<T> {
     >
   ) => void;
   resetForm: () => void;
-  validate: () => boolean;
+  validate: () => Promise<boolean>;
   watch: <K extends keyof T>(key?: K) => T[K] | T;
 }
 
@@ -124,22 +127,24 @@ export const useForm = <T extends Record<string, any>>(
     setDirtyFields(initialDirty);
   };
 
-  const validate = useCallback((): boolean => {
+  const validate = useCallback(async (): Promise<boolean> => {
     if (!validationRules) {
       return true;
     }
 
     const newErrors: Errors<T> = {};
 
-    Object.keys(validationRules).forEach((key) => {
-      const rule = validationRules[key as keyof T];
-      if (rule) {
-        const error = rule(values[key as keyof T], values);
-        if (error) {
-          newErrors[key as keyof T] = error;
+    await Promise.all(
+      Object.keys(validationRules).map(async (key) => {
+        const rule = validationRules[key as keyof T];
+        if (rule) {
+          const error = await rule(values[key as keyof T], values);
+          if (error) {
+            newErrors[key as keyof T] = error;
+          }
         }
-      }
-    });
+      })
+    );
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
