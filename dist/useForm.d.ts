@@ -21,6 +21,7 @@ interface UseForm<T> {
     resetForm: () => void;
     validate: () => Promise<boolean>;
     watch: <K extends keyof T>(key?: K) => T[K] | T;
+    setFieldValue: (path: string, value: any) => void;
 }
 export declare const useForm: <T extends Record<string, any>>(initialValues: T, validationRules?: ValidationRules<T>) => UseForm<T>;
 export {};

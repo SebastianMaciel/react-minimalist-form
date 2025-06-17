@@ -44,6 +44,7 @@ interface UseForm<T> {
   resetForm: () => void;
   validate: () => Promise<boolean>;
   watch: <K extends keyof T>(key?: K) => T[K] | T;
+  setFieldValue: (path: string, value: any) => void;
 }
 
 export const useForm = <T extends Record<string, any>>(
@@ -144,6 +145,60 @@ export const useForm = <T extends Record<string, any>>(
     });
   };
 
+  const setFieldValue = useCallback(
+    (pathString: string, newValue: any) => {
+      setValues((prevValues) => {
+        const path = pathString
+          .replace(/\[(\w+)\]/g, ".$1")
+          .split(".")
+          .filter(Boolean)
+          .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+
+        const setNestedValue = (
+          obj: any,
+          keys: (string | number)[],
+          val: any,
+        ): any => {
+          if (!keys.length) return val;
+
+          const [first, ...rest] = keys;
+
+          if (Array.isArray(obj)) {
+            const arr = [...obj];
+            arr[first as number] = setNestedValue(
+              arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
+              rest,
+              val,
+            );
+            return arr;
+          }
+
+          return {
+            ...obj,
+            [first]: setNestedValue(
+              obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
+              rest,
+              val,
+            ),
+          };
+        };
+
+        const updated = setNestedValue(prevValues, path, newValue);
+        const topKey = path[0] as keyof T;
+        setDirtyFields((d) => ({
+          ...d,
+          [topKey]: updated[topKey] !== initialValues[topKey],
+        }));
+        setTouchedFields((t) => ({
+          ...t,
+          [topKey]: true,
+        }));
+        return updated;
+      });
+    },
+    [],
+  );
+
   const handleBlur = (
     e: React.FocusEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -222,5 +277,6 @@ export const useForm = <T extends Record<string, any>>(
     resetForm,
     validate,
     watch,
+    setFieldValue,
   };
 };
