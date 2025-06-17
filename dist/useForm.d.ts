@@ -11,6 +11,7 @@ interface UseForm<T> {
     values: T;
     setters: Setters<T>;
     errors: Errors<T>;
+    isValid: boolean;
     dirtyFields: DirtyFields<T>;
     isDirty: boolean;
     touchedFields: TouchedFields<T>;
