@@ -26,6 +26,8 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 ❌ Optional Validation: Define validation rules and control error state when needed.
 
+🌳 Nested Names: Use dot or bracket notation in `name` attributes to update nested fields automatically.
+
 ## Installation
 
 Install the library using `pnpm` (recommended) or your preferred package manager.
@@ -172,7 +174,8 @@ export default App;
 ## Nested Objects and Arrays
 
 The hook also works with more complex structures. You can store nested objects
-and arrays in your form state and update them using the generated setters.
+and arrays in your form state and update them using the generated setters or by
+using dot/bracket notation in the `name` attribute.
 
 ```tsx
 interface FormData {
@@ -201,19 +204,26 @@ const ComplexForm = () => {
   return (
     <form onSubmit={(e) => { e.preventDefault(); validate(); }}>
       <input
+        name="user.firstName"
         value={values.user.firstName}
-        onChange={(e) =>
-          setters.user({ ...values.user, firstName: e.target.value })
-        }
+        onChange={handleChange}
         placeholder="First name"
       />
       <input
+        name="user.lastName"
         value={values.user.lastName}
-        onChange={(e) =>
-          setters.user({ ...values.user, lastName: e.target.value })
-        }
+        onChange={handleChange}
         placeholder="Last name"
       />
+
+      {values.tags.map((tag, index) => (
+        <input
+          key={index}
+          name={`tags[${index}]`}
+          value={tag}
+          onChange={handleChange}
+        />
+      ))}
 
       <button type="button" onClick={addTag}>
         Add tag

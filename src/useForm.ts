@@ -53,10 +53,44 @@ export const useForm = <T extends Record<string, any>>(
         ? e.target.checked
         : value;
 
-    setValues((prevValues) => ({
-      ...prevValues,
-      [name]: newValue,
-    }));
+    setValues((prevValues) => {
+      const path = name
+        .replace(/\[(\w+)\]/g, ".$1")
+        .split(".")
+        .filter(Boolean)
+        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+
+      const setNestedValue = (
+        obj: any,
+        keys: (string | number)[],
+        val: any,
+      ): any => {
+        if (!keys.length) return val;
+
+        const [first, ...rest] = keys;
+
+        if (Array.isArray(obj)) {
+          const arr = [...obj];
+          arr[first as number] = setNestedValue(
+            arr[first as number] ?? (typeof rest[0] === "number" ? [] : {}),
+            rest,
+            val,
+          );
+          return arr;
+        }
+
+        return {
+          ...obj,
+          [first]: setNestedValue(
+            obj?.[first] ?? (typeof rest[0] === "number" ? [] : {}),
+            rest,
+            val,
+          ),
+        };
+      };
+
+      return setNestedValue(prevValues, path, newValue);
+    });
   };
 
   const resetForm = () => {
