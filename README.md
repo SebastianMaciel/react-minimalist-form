@@ -398,6 +398,7 @@ A custom hook that provides utilities for managing form state.
 - `isValid`: `true` when the form has no validation errors.
 - `isSubmitting`: `true` while `handleSubmit` is running.
 - `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
+- `validateField`: Validate a single field and update its error. Returns a promise that resolves to `true` when the form has no errors.
 - `dirtyFields`: Object tracking which fields have been modified.
 - `isDirty`: `true` when any field has changed.
 - `touchedFields`: Object tracking which fields have been blurred.
@@ -423,6 +424,7 @@ const {
   clearErrors,
   isSubmitting,
   validate,
+  validateField,
   watch,
   setFieldValue,
   registerField,

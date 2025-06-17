@@ -30,6 +30,7 @@ interface UseForm<T> {
     resetField: (path: string) => void;
     clearErrors: (path?: string) => void;
     validate: () => Promise<boolean>;
+    validateField: (path: string) => Promise<boolean>;
     watch: {
         (): T;
         <K extends keyof T>(key: K): T[K];

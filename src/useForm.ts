@@ -52,6 +52,7 @@ interface UseForm<T> {
   resetField: (path: string) => void;
   clearErrors: (path?: string) => void;
   validate: () => Promise<boolean>;
+  validateField: (path: string) => Promise<boolean>;
   watch: {
     (): T;
     <K extends keyof T>(key: K): T[K];
@@ -485,6 +486,53 @@ export const useForm = <T extends Record<string, any>>(
     return runValidation(values);
   }, [runValidation, values]);
 
+  const validateField = useCallback(
+    async (pathString: string): Promise<boolean> => {
+      const normalized = pathString
+        .replace(/\[(\w+)\]/g, ".$1")
+        .replace(/^\./, "");
+
+      const rule = validationRulesRef.current[normalized];
+
+      if (!rule) {
+        let nextErrors: Errors<T> = {};
+        setErrors((prev) => {
+          const ne = { ...prev };
+          delete ne[normalized];
+          nextErrors = ne;
+          return ne;
+        });
+        const valid = Object.keys(nextErrors).length === 0;
+        setIsValid(valid);
+        return valid;
+      }
+
+      const path = normalized
+        .split(".")
+        .filter(Boolean)
+        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+      const value = path.reduce<any>((acc, seg) => acc?.[seg], values);
+
+      const error = await rule(value, values);
+
+      let nextErrors: Errors<T> = {};
+      setErrors((prev) => {
+        const ne = { ...prev };
+        if (error) {
+          ne[normalized] = error;
+        } else {
+          delete ne[normalized];
+        }
+        nextErrors = ne;
+        return ne;
+      });
+      const valid = Object.keys(nextErrors).length === 0;
+      setIsValid(valid);
+      return valid;
+    },
+    [values]
+  );
+
   useEffect(() => {
     if (validateOnChange && validationRulesRef.current) {
       runValidation(values);
@@ -556,6 +604,7 @@ export const useForm = <T extends Record<string, any>>(
     resetField,
     clearErrors,
     validate,
+    validateField,
     watch: watchCallback,
     setFieldValue,
     registerField,
