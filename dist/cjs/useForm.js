@@ -219,11 +219,7 @@ const useForm = (initialValues, validationRules, config = {}) => {
         });
     };
     const unregisterField = (0, react_1.useCallback)((pathString) => {
-        const path = pathString
-            .replace(/\[(\w+)\]/g, ".$1")
-            .split(".")
-            .filter(Boolean)
-            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const path = parsePath(pathString);
         const removeNested = (obj, keys) => {
             if (!obj)
                 return obj;
@@ -289,9 +285,8 @@ const useForm = (initialValues, validationRules, config = {}) => {
         return runValidation(values);
     }), [runValidation, values]);
     const validateField = (0, react_1.useCallback)((pathString) => __awaiter(void 0, void 0, void 0, function* () {
-        const normalized = pathString
-            .replace(/\[(\w+)\]/g, ".$1")
-            .replace(/^\./, "");
+        const path = parsePath(pathString);
+        const normalized = path.join(".");
         const rule = validationRulesRef.current[normalized];
         if (!rule) {
             let nextErrors = {};
@@ -305,10 +300,6 @@ const useForm = (initialValues, validationRules, config = {}) => {
             setIsValid(valid);
             return valid;
         }
-        const path = normalized
-            .split(".")
-            .filter(Boolean)
-            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
         const value = path.reduce((acc, seg) => acc === null || acc === void 0 ? void 0 : acc[seg], values);
         const error = yield rule(value, values);
         let nextErrors = {};
@@ -342,11 +333,7 @@ const useForm = (initialValues, validationRules, config = {}) => {
             return values;
         }
         if (typeof path === "string" && (path.includes(".") || path.includes("["))) {
-            const segments = path
-                .replace(/\[(\w+)\]/g, ".$1")
-                .split(".")
-                .filter(Boolean)
-                .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+            const segments = parsePath(path);
             return segments.reduce((acc, seg) => acc === null || acc === void 0 ? void 0 : acc[seg], values);
         }
         return values[path];
