@@ -18,6 +18,7 @@ export type ValidationRules<T> = {
 type Errors<T> = Partial<Record<keyof T, string>>;
 
 type DirtyFields<T> = Record<keyof T, boolean>;
+type TouchedFields<T> = Record<keyof T, boolean>;
 
 interface UseForm<T> {
   values: T;
@@ -25,8 +26,15 @@ interface UseForm<T> {
   errors: Errors<T>;
   dirtyFields: DirtyFields<T>;
   isDirty: boolean;
+  touchedFields: TouchedFields<T>;
+  isTouched: boolean;
   handleChange: (
     e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => void;
+  handleBlur: (
+    e: React.FocusEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
@@ -49,8 +57,16 @@ export const useForm = <T extends Record<string, any>>(
     return acc;
   }, {} as DirtyFields<T>);
   const [dirtyFields, setDirtyFields] = useState<DirtyFields<T>>(initialDirty);
+  const initialTouched = Object.keys(initialValues).reduce((acc, key) => {
+    acc[key as keyof T] = false;
+    return acc;
+  }, {} as TouchedFields<T>);
+  const [touchedFields, setTouchedFields] = useState<TouchedFields<T>>(initialTouched);
   const isDirty = Object.keys(initialValues).some(
     (k) => dirtyFields[k as keyof T]
+  );
+  const isTouched = Object.keys(initialValues).some(
+    (k) => touchedFields[k as keyof T]
   );
 
   const setters = Object.keys(initialValues).reduce((acc, key) => {
@@ -120,14 +136,35 @@ export const useForm = <T extends Record<string, any>>(
         ...d,
         [topKey]: updated[topKey] !== initialValues[topKey],
       }));
+      setTouchedFields((t) => ({
+        ...t,
+        [topKey]: true,
+      }));
       return updated;
     });
+  };
+
+  const handleBlur = (
+    e: React.FocusEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const path = e.target.name
+      .replace(/\[(\w+)\]/g, ".$1")
+      .split(".")
+      .filter(Boolean);
+    const topKey = path[0] as keyof T;
+    setTouchedFields((t) => ({
+      ...t,
+      [topKey]: true,
+    }));
   };
 
   const resetForm = () => {
     setValues(initialValues);
     setErrors({});
     setDirtyFields(initialDirty);
+    setTouchedFields(initialTouched);
   };
 
   const validate = useCallback(async (): Promise<boolean> => {
@@ -177,7 +214,10 @@ export const useForm = <T extends Record<string, any>>(
     errors,
     dirtyFields,
     isDirty,
+    touchedFields,
+    isTouched,
     handleChange,
+    handleBlur,
     handleSubmit,
     resetForm,
     validate,

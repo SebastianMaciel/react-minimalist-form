@@ -6,13 +6,17 @@ export type ValidationRules<T> = {
 };
 type Errors<T> = Partial<Record<keyof T, string>>;
 type DirtyFields<T> = Record<keyof T, boolean>;
+type TouchedFields<T> = Record<keyof T, boolean>;
 interface UseForm<T> {
     values: T;
     setters: Setters<T>;
     errors: Errors<T>;
     dirtyFields: DirtyFields<T>;
     isDirty: boolean;
+    touchedFields: TouchedFields<T>;
+    isTouched: boolean;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+    handleBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     handleSubmit: (cb: () => void | Promise<void>) => (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     resetForm: () => void;
     validate: () => Promise<boolean>;

@@ -19,6 +19,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 👀 Watch Functionality: Track individual fields or the entire form state in real-time.
 
 📝 Dirty State Tracking: `dirtyFields` and `isDirty` indicate modified fields and overall form changes.
+🙌 Touched State Tracking: `touchedFields` and `isTouched` tell you which fields have been blurred.
 
 🔄 Reset Support: Easily reset form values to their initial state.
 
@@ -52,7 +53,7 @@ interface FormData {
 }
 
 const MyForm = () => {
-  const { values, errors, dirtyFields, isDirty, handleChange, handleSubmit, resetForm, validate } = useForm<FormData>(
+  const { values, errors, dirtyFields, isDirty, touchedFields, isTouched, handleChange, handleBlur, handleSubmit, resetForm, validate } = useForm<FormData>(
     {
       username: "",
       email: "",
@@ -73,6 +74,7 @@ const MyForm = () => {
         name='username'
         value={values.username}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder='Username'
       />
       {errors.username && <span>{errors.username}</span>}
@@ -80,6 +82,7 @@ const MyForm = () => {
         name='email'
         value={values.email}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder='Email'
       />
       {errors.email && <span>{errors.email}</span>}
@@ -90,7 +93,7 @@ const MyForm = () => {
 };
 ```
 
-`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. Calling `resetForm` clears both states.
+`dirtyFields` lets you know which fields changed from their initial value, while `isDirty` tells you if any field has been modified. `touchedFields` and `isTouched` track fields that have been blurred. Calling `resetForm` clears all of these states.
 
 ## Advanced Example with Watch
 
@@ -296,12 +299,15 @@ A custom hook that provides utilities for managing form state.
 - `setters`: A dynamic object containing setter functions for each field.
 - `handleChange`: A function to handle onChange events for input fields.
 - `handleSubmit`: Wraps validation and `event.preventDefault` for easier form submission.
+- `handleBlur`: Marks a field as touched when an input loses focus.
 - `resetForm`: Resets the form to its initial values.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `errors`: Object containing validation errors.
 - `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
 - `dirtyFields`: Object tracking which fields have been modified.
 - `isDirty`: `true` when any field has changed.
+- `touchedFields`: Object tracking which fields have been blurred.
+- `isTouched`: `true` when any field has been touched.
 
 ### Example
 
@@ -312,7 +318,10 @@ const {
   setters,
   dirtyFields,
   isDirty,
+  touchedFields,
+  isTouched,
   handleChange,
+  handleBlur,
   handleSubmit,
   resetForm,
   validate,
