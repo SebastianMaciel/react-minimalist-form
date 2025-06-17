@@ -24,7 +24,7 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
-✅ Field-level Validation: Pass custom validation rules that receive both the field value and the full form state.
+✅ Field-level Validation: Pass custom (sync or async) validation rules that receive both the field value and the full form state.
 
 ❌ Optional Validation: Define validation rules and control error state when needed.
 
@@ -63,8 +63,8 @@ const MyForm = () => {
     }
   );
 
-  const onSubmit = () => {
-    if (validate()) {
+  const onSubmit = async () => {
+    if (await validate()) {
       console.log("submit", values);
     }
   };
@@ -175,6 +175,46 @@ const App = () => {
 export default App;
 ```
 
+## Async Validation Example
+
+Validation rules can return promises, enabling checks like verifying username availability:
+
+```tsx
+interface FormData {
+  username: string;
+}
+
+const checkUsername = async (u: string) => {
+  const taken = await api.isUserTaken(u);
+  return taken ? "Username already taken" : null;
+};
+
+const App = () => {
+  const { values, handleChange, validate, errors } = useForm<FormData>(
+    { username: "" },
+    { username: checkUsername }
+  );
+
+  const onSubmit = async () => {
+    if (await validate()) {
+      console.log("submit", values);
+    }
+  };
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <input
+        name="username"
+        value={values.username}
+        onChange={handleChange}
+      />
+      {errors.username && <span>{errors.username}</span>}
+      <button type="submit">Submit</button>
+    </form>
+  );
+};
+```
+
 ## Nested Objects and Arrays
 
 The hook also works with more complex structures. You can store nested objects
@@ -206,7 +246,7 @@ const ComplexForm = () => {
   const addTag = () => setters.tags([...values.tags, ""]);
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); validate(); }}>
+    <form onSubmit={async (e) => { e.preventDefault(); await validate(); }}>
       <input
         name="user.firstName"
         value={values.user.firstName}
@@ -248,7 +288,7 @@ A custom hook that provides utilities for managing form state.
 #### Parameters
 
 - `initialValues`: An object representing the initial state of your form. The shape of this object defines the structure of the form.
-- `validationRules` *(optional)*: An object with validation functions for each field.
+- `validationRules` *(optional)*: An object with validation functions (sync or async) for each field.
 
 #### Returns
 
@@ -258,7 +298,7 @@ A custom hook that provides utilities for managing form state.
 - `resetForm`: Resets the form to its initial values.
 - `watch`: A function to track specific fields or the entire form state in real-time.
 - `errors`: Object containing validation errors.
-- `validate`: Run validation and update the errors state. Returns `true` when the form is valid.
+- `validate`: Run validation and update the errors state. Returns a promise that resolves to `true` when the form is valid.
 - `dirtyFields`: Object tracking which fields have been modified.
 - `isDirty`: `true` when any field has changed.
 
