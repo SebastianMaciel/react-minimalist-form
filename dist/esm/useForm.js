@@ -16,7 +16,13 @@ export const useForm = (initialValues, validationRules) => {
         return acc;
     }, {});
     const [dirtyFields, setDirtyFields] = useState(initialDirty);
+    const initialTouched = Object.keys(initialValues).reduce((acc, key) => {
+        acc[key] = false;
+        return acc;
+    }, {});
+    const [touchedFields, setTouchedFields] = useState(initialTouched);
     const isDirty = Object.keys(initialValues).some((k) => dirtyFields[k]);
+    const isTouched = Object.keys(initialValues).some((k) => touchedFields[k]);
     const setters = Object.keys(initialValues).reduce((acc, key) => {
         acc[key] = (value) => {
             setValues((prevValues) => {
@@ -53,13 +59,23 @@ export const useForm = (initialValues, validationRules) => {
             const updated = setNestedValue(prevValues, path, newValue);
             const topKey = path[0];
             setDirtyFields((d) => (Object.assign(Object.assign({}, d), { [topKey]: updated[topKey] !== initialValues[topKey] })));
+            setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
             return updated;
         });
+    };
+    const handleBlur = (e) => {
+        const path = e.target.name
+            .replace(/\[(\w+)\]/g, ".$1")
+            .split(".")
+            .filter(Boolean);
+        const topKey = path[0];
+        setTouchedFields((t) => (Object.assign(Object.assign({}, t), { [topKey]: true })));
     };
     const resetForm = () => {
         setValues(initialValues);
         setErrors({});
         setDirtyFields(initialDirty);
+        setTouchedFields(initialTouched);
     };
     const validate = useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
         if (!validationRules) {
@@ -93,7 +109,10 @@ export const useForm = (initialValues, validationRules) => {
         errors,
         dirtyFields,
         isDirty,
+        touchedFields,
+        isTouched,
         handleChange,
+        handleBlur,
         handleSubmit,
         resetForm,
         validate,
