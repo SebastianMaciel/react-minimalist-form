@@ -22,6 +22,8 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
+❌ Optional Validation: Define validation rules and control error state when needed.
+
 ## Installation
 
 Install the library using `pnpm` (recommended) or your preferred package manager.
@@ -44,31 +46,41 @@ interface FormData {
 }
 
 const MyForm = () => {
-  const { values, handleChange, resetForm } = useForm<FormData>({
-    username: "",
-    email: "",
-  });
+  const { values, errors, handleChange, resetForm, validate } = useForm<FormData>(
+    {
+      username: "",
+      email: "",
+    },
+    {
+      username: (v) => (!v ? "Username is required" : null),
+      email: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "Invalid email"),
+    }
+  );
+
+  const onSubmit = () => {
+    if (validate()) {
+      console.log("submit", values);
+    }
+  };
 
   return (
-    <form>
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <input
         name='username'
         value={values.username}
         onChange={handleChange}
         placeholder='Username'
       />
+      {errors.username && <span>{errors.username}</span>}
       <input
         name='email'
         value={values.email}
         onChange={handleChange}
         placeholder='Email'
       />
-      <button
-        type='button'
-        onClick={resetForm}
-      >
-        Reset
-      </button>
+      {errors.email && <span>{errors.email}</span>}
+      <button type='submit'>Submit</button>
+      <button type='button' onClick={resetForm}>Reset</button>
     </form>
   );
 };
@@ -157,13 +169,14 @@ export default App;
 
 ## API
 
-`useForm<T>(initialValues: T): UseForm<T>`
+`useForm<T>(initialValues: T, validationRules?: ValidationRules<T>): UseForm<T>`
 
 A custom hook that provides utilities for managing form state.
 
 #### Parameters
 
 - `initialValues`: An object representing the initial state of your form. The shape of this object defines the structure of the form.
+- `validationRules` *(optional)*: An object with validation functions for each field.
 
 #### Returns
 
@@ -172,14 +185,26 @@ A custom hook that provides utilities for managing form state.
 - `handleChange`: A function to handle onChange events for input fields.
 - `resetForm`: Resets the form to its initial values.
 - `watch`: A function to track specific fields or the entire form state in real-time.
+- `errors`: Object containing validation errors.
+- `validate`: Run validation and update the errors state. Returns `true` when the form is valid.
 
 ### Example
 
 ```tsx
-const { values, setters, handleChange, resetForm, watch } = useForm({
-  username: "",
-  email: "",
-});
+const {
+  values,
+  errors,
+  setters,
+  handleChange,
+  resetForm,
+  validate,
+  watch,
+} = useForm(
+  { username: "", email: "" },
+  {
+    username: (v) => (!v ? "Required" : null),
+  }
+);
 ```
 
 ## Contributing
