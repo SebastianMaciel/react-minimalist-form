@@ -390,11 +390,7 @@ export const useForm = <T extends Record<string, any>>(
   };
 
   const unregisterField = useCallback((pathString: string) => {
-    const path = pathString
-      .replace(/\[(\w+)\]/g, ".$1")
-      .split(".")
-      .filter(Boolean)
-      .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+    const path = parsePath(pathString);
 
     const removeNested = (obj: any, keys: (string | number)[]): any => {
       if (!obj) return obj;
@@ -484,9 +480,8 @@ export const useForm = <T extends Record<string, any>>(
 
   const validateField = useCallback(
     async (pathString: string): Promise<boolean> => {
-      const normalized = pathString
-        .replace(/\[(\w+)\]/g, ".$1")
-        .replace(/^\./, "");
+      const path = parsePath(pathString);
+      const normalized = path.join(".");
 
       const rule = validationRulesRef.current[normalized];
 
@@ -503,10 +498,6 @@ export const useForm = <T extends Record<string, any>>(
         return valid;
       }
 
-      const path = normalized
-        .split(".")
-        .filter(Boolean)
-        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
       const value = path.reduce<any>((acc, seg) => acc?.[seg], values);
 
       const error = await rule(value, values);
@@ -550,11 +541,7 @@ export const useForm = <T extends Record<string, any>>(
     }
 
     if (typeof path === "string" && (path.includes(".") || path.includes("["))) {
-      const segments = path
-        .replace(/\[(\w+)\]/g, ".$1")
-        .split(".")
-        .filter(Boolean)
-        .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+      const segments = parsePath(path);
       return segments.reduce<any>((acc, seg) => acc?.[seg], values);
     }
 
