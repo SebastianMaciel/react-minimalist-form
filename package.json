@@ -2,10 +2,14 @@
   "name": "react-minimalist-form",
   "version": "1.1.1",
   "description": "A lightweight form management hook for React",
-  "main": "dist/index.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "npm run build"
   },
