@@ -22,6 +22,8 @@ Designed to provide a simple and intuitive API for common form needs, including 
 
 🪶 Lightweight: No unnecessary overhead, just what you need for managing form state in React.
 
+✅ Field-level Validation: Pass custom validation rules that receive both the field value and the full form state.
+
 ❌ Optional Validation: Define validation rules and control error state when needed.
 
 ## Installation
@@ -167,6 +169,62 @@ const App = () => {
 export default App;
 ```
 
+## Nested Objects and Arrays
+
+The hook also works with more complex structures. You can store nested objects
+and arrays in your form state and update them using the generated setters.
+
+```tsx
+interface FormData {
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+  tags: string[];
+}
+
+const ComplexForm = () => {
+  const { values, setters, validate, errors } = useForm<FormData>(
+    {
+      user: { firstName: "", lastName: "" },
+      tags: [],
+    },
+    {
+      user: ({ firstName, lastName }) =>
+        firstName && lastName ? null : "Both names are required",
+      tags: (t) => (t.length ? null : "At least one tag"),
+    }
+  );
+
+  const addTag = () => setters.tags([...values.tags, ""]);
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); validate(); }}>
+      <input
+        value={values.user.firstName}
+        onChange={(e) =>
+          setters.user({ ...values.user, firstName: e.target.value })
+        }
+        placeholder="First name"
+      />
+      <input
+        value={values.user.lastName}
+        onChange={(e) =>
+          setters.user({ ...values.user, lastName: e.target.value })
+        }
+        placeholder="Last name"
+      />
+
+      <button type="button" onClick={addTag}>
+        Add tag
+      </button>
+
+      <pre>{JSON.stringify(errors, null, 2)}</pre>
+    </form>
+  );
+};
+```
+
 ## API
 
 `useForm<T>(initialValues: T, validationRules?: ValidationRules<T>): UseForm<T>`
@@ -225,6 +283,18 @@ cd react-minimalist-form
 
 ```bash
 pnpm install
+```
+
+3. Run the tests:
+
+```bash
+pnpm test
+```
+
+4. Build the project locally:
+
+```bash
+pnpm build
 ```
 
 ## License
