@@ -294,6 +294,45 @@ export const useForm = (initialValues, validationRules, config = {}) => {
     const validate = useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
         return runValidation(values);
     }), [runValidation, values]);
+    const validateField = useCallback((pathString) => __awaiter(void 0, void 0, void 0, function* () {
+        const normalized = pathString
+            .replace(/\[(\w+)\]/g, ".$1")
+            .replace(/^\./, "");
+        const rule = validationRulesRef.current[normalized];
+        if (!rule) {
+            let nextErrors = {};
+            setErrors((prev) => {
+                const ne = Object.assign({}, prev);
+                delete ne[normalized];
+                nextErrors = ne;
+                return ne;
+            });
+            const valid = Object.keys(nextErrors).length === 0;
+            setIsValid(valid);
+            return valid;
+        }
+        const path = normalized
+            .split(".")
+            .filter(Boolean)
+            .map((seg) => (/^\d+$/.test(seg) ? parseInt(seg, 10) : seg));
+        const value = path.reduce((acc, seg) => acc === null || acc === void 0 ? void 0 : acc[seg], values);
+        const error = yield rule(value, values);
+        let nextErrors = {};
+        setErrors((prev) => {
+            const ne = Object.assign({}, prev);
+            if (error) {
+                ne[normalized] = error;
+            }
+            else {
+                delete ne[normalized];
+            }
+            nextErrors = ne;
+            return ne;
+        });
+        const valid = Object.keys(nextErrors).length === 0;
+        setIsValid(valid);
+        return valid;
+    }), [values]);
     useEffect(() => {
         if (validateOnChange && validationRulesRef.current) {
             runValidation(values);
@@ -348,6 +387,7 @@ export const useForm = (initialValues, validationRules, config = {}) => {
         resetField,
         clearErrors,
         validate,
+        validateField,
         watch: watchCallback,
         setFieldValue,
         registerField,
